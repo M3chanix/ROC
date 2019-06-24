@@ -9,7 +9,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QAction, QFileDialog, QComboBox, QPushButton, \
     QGridLayout, QLabel, QTableWidget, QTableWidgetItem, QLineEdit, QInputDialog, QDialog, QCheckBox, QHBoxLayout, \
     QVBoxLayout
-os.chdir("C://py1")
+os.chdir("C://ROC")
 
 
 def parse_file(fname):
@@ -35,13 +35,13 @@ def parse_file(fname):
 
 
 def save_to_sql(data):
-    connection = sql.connect("C:/py1/db1.db")
+    connection = sql.connect("C:/ROC/Data.db")
     data.to_sql("Patient_data", connection, if_exists="append", index=False)
     connection.close()
 
 
 def read_from_sql(script):
-    connection = sql.connect("C:/py1/db1.db")
+    connection = sql.connect("C:/ROC/Data.db")
     sql_data = pd.read_sql(script, connection)
     connection.close()
 
@@ -56,7 +56,7 @@ class SavedDataWindow(QWidget):
 
     def get_sql_lables(self):
         self.sql_lable_values = {}
-        connection = sql.connect("C:/py1/db1.db")
+        connection = sql.connect("C:/ROC/Data.db")
         cursor = connection.cursor()
         query_part1 = "select distinct "
         query_part2 = " from Patient_data"
@@ -222,7 +222,7 @@ class NewDataWindow(QWidget):
 
     def get_sql_lables(self):
         self.sql_lable_values = {}
-        connection = sql.connect("C:/py1/db1.db")
+        connection = sql.connect("C:/ROC/Data.db")
         cursor = connection.cursor()
         query_part1 = "select distinct "
         query_part2 = " from Patient_data"
@@ -369,7 +369,7 @@ class ResultsWindow(QWidget):
         threshold = dict()
         roc_auc = dict()
         for i in norm_data.columns[9:]:
-            fpr[i], tpr[i], threshold[i] = metrics.roc_curve(norm_data["Tissue"], norm_data[i], pos_label="Goiter")
+            fpr[i], tpr[i], threshold[i] = metrics.roc_curve(norm_data["BIN_Diagnosis"], norm_data[i], pos_label="HSIL")
             roc_auc[i] = metrics.auc(fpr[i], tpr[i])
 
         return fpr, tpr, threshold, roc_auc
