@@ -7,7 +7,8 @@ import matplotlib.pyplot as plt
 from sklearn import metrics
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QAction, QFileDialog, QComboBox, QPushButton, \
-    QGridLayout, QLabel, QTableWidget, QTableWidgetItem, QLineEdit, QInputDialog, QDialog, QCheckBox, QHBoxLayout
+    QGridLayout, QLabel, QTableWidget, QTableWidgetItem, QLineEdit, QInputDialog, QDialog, QCheckBox, QHBoxLayout, \
+    QVBoxLayout
 os.chdir("C://py1")
 
 
@@ -92,15 +93,17 @@ class SavedDataWindow(QWidget):
             script = script[:-3]
 
         self.sql_data = read_from_sql(script)
-        self.resultWidget.setRowCount(len(self.sql_data))
+        self.sql_data = self.sql_data.dropna(axis=1, how="all")
+        self.fullData = self.fullData.append(self.sql_data)
+        self.fullData =  self.fullData.drop_duplicates()
+        self.resultWidget.setRowCount(len(self.fullData))
 
-        for i in range(len(self.sql_data)):
+        for i in range(len(self.fullData)):
             for j in range(len(self.table_labels)):
                 a = QLabel()
-                a.setText(self.sql_data.iloc[i, j])
+                a.setText(self.fullData.iloc[i, j])
                 self.resultWidget.setCellWidget(i, j, a)
         self.resultWidget.resizeColumnsToContents()
-        self.sql_data = self.sql_data.dropna(axis=1, how="all")
 
     def prepareAnalyzis(self):
         results_widget = ResultsWindow()
@@ -116,6 +119,7 @@ class SavedDataWindow(QWidget):
         self.resultWidget.setColumnCount(len(self.table_labels))
         self.searchWidget.setHorizontalHeaderLabels(self.table_labels)
         self.resultWidget.setHorizontalHeaderLabels(self.table_labels)
+        self.resultWidget.resizeColumnsToContents()
         self.get_sql_lables()
         self.searchWidget.setRowCount(1)
 
@@ -131,15 +135,15 @@ class SavedDataWindow(QWidget):
             self.searchWidget.setCellWidget(0, i, a)
         self.searchWidget.resizeColumnsToContents()
 
-
     def initUI(self):
         self.setWindowTitle("TableWidget Test")
         self.grid_layout = QGridLayout()
         self.searchWidget = QTableWidget()
         self.resultWidget = QTableWidget()
+        self.fullData = pd.DataFrame()
 
         self.TextLabel = QLabel("Поиск по базе")
-        processSearchButton = QPushButton("Обработать")
+        processSearchButton = QPushButton("Добавить данные на обработку")
         AnalyzeButton = QPushButton("Провести анализ")
         self.createSearchWidget()
         self.grid_layout.addWidget(self.TextLabel)
@@ -280,14 +284,22 @@ class FirstWindow(QWidget):
         self.initUI()
 
     def initUI(self):
-        self.hboxLayout = QHBoxLayout()
+        self.vLayout = QVBoxLayout()
+        self.hLayout = QHBoxLayout()
         SavedDataButton = QPushButton("Использовать данные из базы")
         NewDataButton = QPushButton("Внести новые данные из файла")
-        self.hboxLayout.addWidget(SavedDataButton)
-        self.hboxLayout.addWidget(NewDataButton)
+        label = QLabel("ROC Evaluator")
+        label2 = QLabel("v1.01")
+        self.hLayout.addWidget(SavedDataButton)
+        self.hLayout.addWidget(NewDataButton)
+        self.vLayout.addWidget(label)
+        self.vLayout.addWidget(label2)
+        self.vLayout.addStretch(1)
+        self.vLayout.addItem(self.hLayout)
         NewDataButton.clicked.connect(self.NewDataClicked)
         SavedDataButton.clicked.connect(self.SavedDataClicked)
-        self.setLayout(self.hboxLayout)
+        self.setLayout(self.vLayout)
+        # NewDataButton.move(30, 100)
 
 
 class MainWindow(QMainWindow):
@@ -357,7 +369,7 @@ class ResultsWindow(QWidget):
         threshold = dict()
         roc_auc = dict()
         for i in norm_data.columns[9:]:
-            fpr[i], tpr[i], threshold[i] = metrics.roc_curve(norm_data["BIN_Diagnosis"], norm_data[i], pos_label="HSIL")
+            fpr[i], tpr[i], threshold[i] = metrics.roc_curve(norm_data["Tissue"], norm_data[i], pos_label="Goiter")
             roc_auc[i] = metrics.auc(fpr[i], tpr[i])
 
         return fpr, tpr, threshold, roc_auc
