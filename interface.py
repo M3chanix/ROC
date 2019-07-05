@@ -12,13 +12,17 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QAction, QFileDi
 os.chdir("C://ROC")
 
 
+def tuple_to_string(tuple_list):
+    string_list = []
+    for i in range(len(tuple_list)):
+        string_list.append(tuple_list[i][0])
+    return string_list
+
+
 def parse_file(fname):
     file = pd.read_excel(fname, skiprows=0)
     file = file.dropna(axis=0, how='all')
     unique_ids = file["Sample"].unique()
-
-    # todo: в реальных данных индексы не должны совподать, поэтому строчка с дублированием лишняя
-    # unique_ids = np.append(unique_ids, unique_ids)
 
     Cq = file["Cq"].to_numpy()
     miRNA_count = int(len(file)/len(unique_ids))
@@ -52,21 +56,62 @@ class SavedDataWindow(QWidget):
 
     def __init__(self):
         super().__init__()
+        self.table_labels = ["Sample", "Tissue", "BIN_Diagnosis", "Source", "Material", "Operator_RNA_Isolation",
+                             "Operator_PCR", "RNA_Concentration", "Diagnosis"]
+        self.sql_labels = ["Tissue", "BIN_Diagnosis", "Source", "Material", "Operator_RNA_Isolation",
+                           "Operator_PCR"]
+        self.sql_label_values = self.get_sql_labels(self.sql_labels)
         self.initUI()
 
-    def get_sql_lables(self):
-        self.sql_lable_values = {}
+    def get_sql_labels(self, sql_labels):
+        sql_label_values = {}
         connection = sql.connect("C:/ROC/Data.db")
         cursor = connection.cursor()
         query_part1 = "select distinct "
         query_part2 = " from Patient_data"
-        for label in self.sql_labels:
+        for label in sql_labels:
             query = query_part1+label+query_part2
             cursor.execute(query)
-            self.sql_lable_values[label] = cursor.fetchall()
+            sql_label_values[label] = cursor.fetchall()
 
         cursor.close()
         connection.close()
+        return sql_label_values
+
+    def initUI(self):
+        self.class_management_widget1 = ClassManagementWidget(self.table_labels, self.sql_labels, self.sql_label_values, "Класс 1")
+        self.class_management_widget2 = ClassManagementWidget(self.table_labels, self.sql_labels, self.sql_label_values, "Класс 2")
+        self.Hbox = QHBoxLayout()
+        self.Vbox = QVBoxLayout()
+        self.prepare_button = QPushButton("Провести анализ")
+        self.Hbox.addWidget(self.class_management_widget1)
+        self.Hbox.addWidget(self.class_management_widget2)
+        self.Vbox.addLayout(self.Hbox)
+        self.Vbox.addWidget(self.prepare_button)
+        self.prepare_button.clicked.connect(self.prepare_analyzis)
+        self.setLayout(self.Vbox)
+        main_window.setGeometry(300, 200, 1500, 450)
+        self.show()
+
+    def prepare_analyzis(self):
+        class1_data = self.class_management_widget1.fullData
+        class2_data = self.class_management_widget2.fullData
+        class1_data.insert(0, "Class", 1)
+        class2_data.insert(0, "Class", 0)
+        result_data = class1_data.append(class2_data)
+        results_widget = ResultsWindow(result_data)
+        main_window.setCentralWidget(results_widget)
+
+
+class ClassManagementWidget(QWidget):
+
+    def __init__(self, table_labels, sql_labels, sql_label_values, name):
+        super().__init__()
+        self.table_labels = table_labels
+        self.sql_labels = sql_labels
+        self.sql_label_values = sql_label_values
+        self.name = name
+        self.initUI()
 
     def getSearcResults(self):
         script = """
@@ -105,28 +150,18 @@ class SavedDataWindow(QWidget):
                 self.resultWidget.setCellWidget(i, j, a)
         self.resultWidget.resizeColumnsToContents()
 
-    def prepareAnalyzis(self):
-        results_widget = ResultsWindow()
-        results_widget.initUI(self.sql_data)
-        main_window.setCentralWidget(results_widget)
-
     def createSearchWidget(self):
-        self.table_labels = ["Sample", "Tissue", "BIN_Diagnosis", "Source", "Material", "Operator_RNA_Isolation",
-                             "Operator_PCR", "RNA_Concentration", "Diagnosis"]
-        self.sql_labels = ["Tissue", "BIN_Diagnosis", "Source", "Material", "Operator_RNA_Isolation",
-                             "Operator_PCR"]
         self.searchWidget.setColumnCount(len(self.table_labels))
         self.resultWidget.setColumnCount(len(self.table_labels))
         self.searchWidget.setHorizontalHeaderLabels(self.table_labels)
         self.resultWidget.setHorizontalHeaderLabels(self.table_labels)
         self.resultWidget.resizeColumnsToContents()
-        self.get_sql_lables()
         self.searchWidget.setRowCount(1)
 
         for key, j in zip(self.sql_labels, range(len(self.sql_labels))):
             a = QComboBox()
             a.addItem("Any")
-            for label in self.sql_lable_values[key]:
+            for label in self.sql_label_values[key]:
                 a.addItem(label[0])
             self.searchWidget.setCellWidget(0, j+1, a)
 
@@ -142,22 +177,20 @@ class SavedDataWindow(QWidget):
         self.resultWidget = QTableWidget()
         self.fullData = pd.DataFrame()
 
-        self.TextLabel = QLabel("Поиск по базе")
+        self.TextLabel = QLabel(self.name)
         processSearchButton = QPushButton("Добавить данные на обработку")
-        AnalyzeButton = QPushButton("Провести анализ")
+        # AnalyzeButton = QPushButton("Провести анализ")
         self.createSearchWidget()
         self.grid_layout.addWidget(self.TextLabel)
         self.grid_layout.addWidget(self.searchWidget)
         self.grid_layout.addWidget(processSearchButton)
         self.grid_layout.addWidget(self.resultWidget)
-        self.grid_layout.addWidget(AnalyzeButton)
+        # self.grid_layout.addWidget(AnalyzeButton)
 
         processSearchButton.clicked.connect(self.getSearcResults)
-        AnalyzeButton.clicked.connect(self.prepareAnalyzis)
+        # AnalyzeButton.clicked.connect(self.prepareAnalyzis)
 
         self.setLayout(self.grid_layout)
-        self.setGeometry(300, 300, 930, 400)
-        self.show()
 
 
 class NewDataWindow(QWidget):
@@ -172,7 +205,8 @@ class NewDataWindow(QWidget):
              "Operator_PCR", "RNA_Concentration", "Diagnosis"]
         self.sql_labels = ["Source", "Material", "Operator_RNA_Isolation", "Operator_PCR"]
         self.tableWidget.setHorizontalHeaderLabels(self.table_labels)
-        self.get_sql_lables()
+        self.sql_label_values = {}
+        self.get_sql_labels()
         patient_ids, self.tissue_list, self.patient_table = parse_file(self.fname)
         self.tableWidget.setRowCount(len(patient_ids))
 
@@ -185,7 +219,7 @@ class NewDataWindow(QWidget):
             self.tableWidget.setCellWidget(i, 2, a)
             for key, j in zip(self.sql_labels, range(len(self.sql_labels))):
                 a = QComboBox()
-                for label in self.sql_lable_values[key]:
+                for label in self.sql_label_values[key]:
                     a.addItem(label[0])
                 a.addItem("Add new...")
                 a.activated.connect(self.addNewLabel)
@@ -204,14 +238,14 @@ class NewDataWindow(QWidget):
         processFileButton = QPushButton("Обработать")
         self.grid_layout.addWidget(fileButton)
         self.grid_layout.addWidget(self.fnameLabel)
-        AnalyzeButton = QPushButton("Провести анализ")
+        saveButton = QPushButton("Сохранить в базу данных")
         self.grid_layout.addWidget(processFileButton)
         self.grid_layout.addWidget(self.tableWidget)
-        self.grid_layout.addWidget(AnalyzeButton)
+        self.grid_layout.addWidget(saveButton)
 
         fileButton.clicked.connect(self.manageFile)
         processFileButton.clicked.connect(self.createTableWidget)
-        AnalyzeButton.clicked.connect(self.prepareAnalyzis)
+        saveButton.clicked.connect(self.prepare_and_save)
 
         self.setLayout(self.grid_layout)
 
@@ -220,8 +254,7 @@ class NewDataWindow(QWidget):
         self.fnameLabel.setText("Выбранный файл: {}".format(fname))
         self.fname = fname
 
-    def get_sql_lables(self):
-        self.sql_lable_values = {}
+    def get_sql_labels(self):
         connection = sql.connect("C:/ROC/Data.db")
         cursor = connection.cursor()
         query_part1 = "select distinct "
@@ -229,7 +262,7 @@ class NewDataWindow(QWidget):
         for label in self.sql_labels:
             query = query_part1+label+query_part2
             cursor.execute(query)
-            self.sql_lable_values[label] = cursor.fetchall()
+            self.sql_label_values[label] = cursor.fetchall()
 
         cursor.close()
         connection.close()
@@ -245,7 +278,7 @@ class NewDataWindow(QWidget):
                     self.tableWidget.cellWidget(i, index.column()).insertItem(e, text)
                 self.tableWidget.cellWidget(index.row(), index.column()).setCurrentIndex(e)
 
-    def prepareAnalyzis(self):
+    def prepare_and_save(self):
         additional_data_dict = {}
         # todo: заменить все дебильные костыли с range на нормальный синтаксис range(start, stop, step)
         for j in range(self.tableWidget.columnCount()-2):
@@ -257,17 +290,10 @@ class NewDataWindow(QWidget):
                     column_list.append(self.tableWidget.cellWidget(i, j+2).text())
             additional_data_dict[self.tableWidget.horizontalHeaderItem(j+2).text()] = column_list
         additional_data = pd.DataFrame(additional_data_dict)
-
-        results_widget = ResultsWindow()
-
         for i, label in zip(range(len(additional_data.columns)), additional_data.columns):
             self.patient_table.insert(i+1, label, additional_data[label])
-            # if i == 0:
-            #     results_widget.initUI(self.patient_table)
         self.patient_table.insert(1, "Tissue", self.tissue_list)
-        results_widget.initUI(self.patient_table)
         save_to_sql(self.patient_table)
-        main_window.setCentralWidget(results_widget)
 
 
 class FirstWindow(QWidget):
@@ -299,7 +325,6 @@ class FirstWindow(QWidget):
         NewDataButton.clicked.connect(self.NewDataClicked)
         SavedDataButton.clicked.connect(self.SavedDataClicked)
         self.setLayout(self.vLayout)
-        # NewDataButton.move(30, 100)
 
 
 class MainWindow(QMainWindow):
@@ -310,18 +335,17 @@ class MainWindow(QMainWindow):
 
     def initUI(self):
         self.setWindowTitle("MainWindow")
-        self.setGeometry(300, 200, 1030, 450)
+        self.setGeometry(300, 200, 1000, 450)
         first_window = FirstWindow()
-        # new_data_window = NewDataWindow()
         self.setCentralWidget(first_window)
         self.show()
 
 
 class ResultsWindow(QWidget):
 
-    def __init__(self):
+    def __init__(self, raw_data):
         super().__init__()
-        # self.initUI()
+        self.initUI(raw_data)
 
     def initUI(self, raw_data):
         norm_data = self.normalization(raw_data)
@@ -354,6 +378,7 @@ class ResultsWindow(QWidget):
         self.draw_roc_curve(self.fpr, self.tpr, self.roc_auc, picked_values)
 
     def normalization(self, raw_data):
+        # todo: убрать bin_diagnosis и тогда код можно не менять
         column_names = list(raw_data)
         norm_data = pd.DataFrame(raw_data, columns=raw_data.columns[:9])
         for divident in column_names[9:]:
@@ -369,7 +394,7 @@ class ResultsWindow(QWidget):
         threshold = dict()
         roc_auc = dict()
         for i in norm_data.columns[9:]:
-            fpr[i], tpr[i], threshold[i] = metrics.roc_curve(norm_data["BIN_Diagnosis"], norm_data[i], pos_label="HSIL")
+            fpr[i], tpr[i], threshold[i] = metrics.roc_curve(norm_data["Class"], norm_data[i])
             roc_auc[i] = metrics.auc(fpr[i], tpr[i])
 
         return fpr, tpr, threshold, roc_auc
