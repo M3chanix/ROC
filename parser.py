@@ -1,5 +1,8 @@
 import os
-os.chdir("C://py1")
+import pandas as pd
+import xlrd
+from datetime import datetime
+
 # string_list = []
 # f = open('unparsedMiRNA.txt')
 # count = 0
@@ -18,6 +21,7 @@ os.chdir("C://py1")
 # for index in string_list:
 #     f.write(index + " REAL,\n")
 # f.close()
+
 
 
 # script = """
@@ -39,18 +43,44 @@ os.chdir("C://py1")
 # script += ");"
 # print(script)
 
-mylist = []
-f = open("parsedMiRNA_no_indexes.txt")
-for line in f:
-    if line not in mylist:
-        mylist.append(line)
-# myset = set(mylist)
-# print(len(mylist)-len(myset))
-# print(len(mylist))
-# print(mylist)
-f.close()
 
-f = open("parsedMiRNA_no_duplicates.txt", "w")
-for index in mylist:
-    f.write(index)
-f.close()
+
+# mylist = []
+# f = open("parsedMiRNA_no_indexes.txt")
+# for line in f:
+#     if line not in mylist:
+#         mylist.append(line)
+# f.close()
+#
+# f = open("parsedMiRNA_no_duplicates.txt", "w")
+# for index in mylist:
+#     f.write(index)
+# f.close()
+
+
+# loc = ("C://py1//1-goiter_mod.xls")
+# wb = xlrd.open_workbook(loc)
+# sheet = wb.sheet_by_index(0)
+# file_name = sheet.cell_value(0, 1)
+# date = sheet.cell_value(5, 1)
+# date_object = datetime.strptime(date[:-4], "%m/%d/%Y %H:%M:%S")
+# date = date_object.strftime("%Y-%m-%d %H:%M:%S")
+# df = pd.read_excel("1-goiter_mod.xls", skiprows=14)
+# print(df)
+# df["Date"] = date
+# df["File"] = file_name
+# df = df.rename(index=str, columns={"Ds": "Diagnosis"})
+# df_new = pd.pivot_table(df, index=["Sample", "Tissue", "Diagnosis", "Date", "File"], columns=["miRNA"])
+# print(df_new)
+# df_new.columns = df_new.columns.get_level_values(1)
+# df_new = df_new.reset_index(level=[0, 1, 2, 3, 4])
+# print(df_new)
+
+
+
+os.chdir("C://py1//machine_files")
+names = pd.DataFrame()
+for file in os.listdir("C://py1//machine_files"):
+    df = pd.read_excel(file, skiprows=19, usecols=[2])
+    names = names.append(df, ignore_index=True)
+print(len(names["Sample"].unique()))
