@@ -175,11 +175,11 @@ class ClassManagementWidget(QWidget):
         self.fullData = self.fullData.drop_duplicates()
         self.resultWidget.setRowCount(len(self.fullData))
 
-        for i in range(int(len(self.fullData))):
-            for j in range(int(len(self.table_labels))):
+        for i in range(len(self.fullData)):
+            for j in range(len(self.table_labels)):
                 a = QLabel()
                 # todo: без приведения к интам не работало
-                a.setText(self.fullData.iloc[i, j])
+                a.setText(str(self.fullData.iloc[i, j]))
                 self.resultWidget.setCellWidget(i, j, a)
         self.resultWidget.resizeColumnsToContents()
 
