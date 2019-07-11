@@ -178,7 +178,8 @@ class ClassManagementWidget(QWidget):
         for i in range(len(self.fullData)):
             for j in range(len(self.table_labels)):
                 a = QLabel()
-                a.setText(self.fullData.iloc[i, j])
+                # todo: без приведения к интам не работало
+                a.setText(self.fullData.iloc[int(i), int(j)])
                 self.resultWidget.setCellWidget(i, j, a)
         self.resultWidget.resizeColumnsToContents()
 
