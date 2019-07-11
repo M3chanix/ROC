@@ -31,6 +31,17 @@ def parse_file(fname):
     date_object = datetime.strptime(date[:-4], "%m/%d/%Y %H:%M:%S")
     date = date_object.strftime("%Y-%m-%d %H:%M:%S")
     df = pd.read_excel(fname, skiprows=19)
+
+    # перемещение использованного файла в другую директорию
+    new_path = "C://py1//group_both_files_used//"
+    slash_pointer = 0
+    for symbol, i in zip(fname, range(len(fname))):
+        if symbol == "/":
+            slash_pointer = i
+    only_file_name = fname[slash_pointer+1:]
+    new_file = new_path + only_file_name
+    os.rename(fname, new_file)
+
     df["Date"] = date
     df["File"] = file_name
     df = df.rename(index=str, columns={"Ds": "Diagnosis"})
