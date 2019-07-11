@@ -5,12 +5,18 @@ os.chdir("C:/ROC")
 
 con = sql.connect("Data.db")
 cur = con.cursor()
+# cur.execute("SELECT sql FROM sqlite_master")
+# cur.execute("PRAGMA table_info(Patient_data)")
+# cur.execute("Insert into Patient_data(column_name) values(1)")
 # cur.execute("Select sql from sqlite_master where name = 'Patient_data';")
 # cur.execute("Drop table Patient_data")
 cur.execute('Select * from Patient_data')
 data = cur.fetchall()
 for row in data:
     print(row)
+    print(len(row))
+# print(set)
+# print(len(set))
 # print(len(data))
 
 # script = """
@@ -37,7 +43,7 @@ for row in data:
 # Material TEXT NOT NULL,
 # Operator_RNA_Isolation TEXT NOT NULL,
 # Operator_PCR TEXT NOT NULL,
-# RNA_Concentration REAL NOT NULL,
+# RNA_Concentration REAL NOT NULL);
 # """
 #
 # f = open("C:/py1/parsedMiRNA_no_duplicates.txt")
@@ -46,7 +52,7 @@ for row in data:
 # script = script[:-2]
 # script += ");"
 # print(script)
-#
+
 # cur.execute(script)
 
 

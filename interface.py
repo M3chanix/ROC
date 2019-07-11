@@ -22,36 +22,27 @@ def tuple_to_string(tuple_list):
 
 
 def parse_file(fname):
-    # # todo: переписать для новых файлов с диагнозом и датой
-    # file = pd.read_excel(fname, skiprows=0)
-    # file = file.dropna(axis=0, how='all')
-    # unique_ids = file["Sample"].unique()
-    #
-    # Cq = file["Cq"].to_numpy()
-    # miRNA_count = int(len(file)/len(unique_ids))
-    # Cq.resize(len(unique_ids), miRNA_count)
-    # labels = file["miRNA"].unique()
-    # patient_table = pd.DataFrame(Cq, columns=labels)
-    # patient_table.insert(0, "Sample", unique_ids)
-    # tissue = np.array([])
-    # for i in range(int(len(unique_ids))):
-    #     # todo: сделать обработку случайного числа микрорнк, а не 24
-    #     tissue = np.append(tissue, file["Tissue"].iloc[miRNA_count*i])
-    #
-    # return(unique_ids, tissue, patient_table)
+    normalizators = ["Blank (H2O)", "UniSp2", "UniSp3 IPC", "UniSp4", "UniSp5", "UniSp6"]
+
     wb = xlrd.open_workbook(fname)
     sheet = wb.sheet_by_index(0)
     file_name = sheet.cell_value(0, 1)
     date = sheet.cell_value(5, 1)
     date_object = datetime.strptime(date[:-4], "%m/%d/%Y %H:%M:%S")
     date = date_object.strftime("%Y-%m-%d %H:%M:%S")
-    df = pd.read_excel(fname, skiprows=14)
+    df = pd.read_excel(fname, skiprows=19)
     df["Date"] = date
     df["File"] = file_name
     df = df.rename(index=str, columns={"Ds": "Diagnosis"})
-    df_new = pd.pivot_table(df, index=["Sample", "Tissue", "Diagnosis", "Date", "File"], columns=["miRNA"])
+    # ниже может быть columns=["miRNA"], проблемы с единым форматом файла
+    df_new = pd.pivot_table(df, index=["Sample", "Tissue", "Diagnosis", "Date", "File"], columns=["miR"])
     df_new.columns = df_new.columns.get_level_values(1)
     df_new = df_new.reset_index(level=[0, 1, 2, 3, 4])
+    for normalizator in normalizators:
+        try:
+            df_new = df_new.drop(columns=normalizator)
+        except KeyError:
+            pass
     return df_new
 
 
@@ -85,13 +76,34 @@ def get_sql_labels(sql_labels):
     return sql_label_values
 
 
+def alter_new_columns(patient_data):
+    new_labels = set()
+    for column in patient_data.columns:
+        new_labels.add(column)
+
+    con = sql.connect("Data.db")
+    cur = con.cursor()
+    cur.execute("PRAGMA table_info(Patient_data)")
+    data = cur.fetchall()
+    sql_labels = set()
+    for row in data:
+        sql_labels.add((row[1]))
+    diff_set = new_labels.difference(sql_labels)
+    for column in diff_set:
+        script = "ALTER TABLE Patient_data ADD COLUMN " + "[" + column + "]" + " REAL"
+        cur.execute(script)
+    cur.close()
+    con.close()
+
+
 class SavedDataWindow(QWidget):
 
     def __init__(self):
         super().__init__()
-        self.table_labels = ["Sample", "Tissue", "Diagnosis", "Source", "Material", "Operator_RNA_Isolation",
-                             "Operator_PCR", "RNA_Concentration", "Date"]
-        self.sql_labels = ["Tissue", "Diagnosis", "Source", "Material", "Operator_RNA_Isolation",
+        self.table_labels = ["Sample", "Tissue", "Diagnosis", "Date", "File", "Source", "Material",
+                             "Operator_RNA_Isolation",
+                             "Operator_PCR", "RNA_Concentration"]
+        self.sql_labels = ["Tissue", "Diagnosis", "File", "Source", "Material", "Operator_RNA_Isolation",
                            "Operator_PCR"]
         self.sql_label_values = get_sql_labels(self.sql_labels)
         self.initUI()
@@ -137,12 +149,14 @@ class ClassManagementWidget(QWidget):
         """
 
         queryValues = []
-        for i in (0, 7, 8):
+        sql_order = [1, 2, 4, 5, 6, 7, 8]
+        order = [0, 3, 9]
+        for i in order:
             current_value = self.searchWidget.cellWidget(0, i).text()
             if current_value != "":
                 queryValues.append('{} = "{}"'.format(self.table_labels[i], current_value))
 
-        for i in range(1, 7, 1):
+        for i in sql_order:
             current_value = self.searchWidget.cellWidget(0, i).currentText()
             if current_value != "Any":
                 queryValues.append('{} = "{}"'.format(self.table_labels[i], current_value))
@@ -158,7 +172,7 @@ class ClassManagementWidget(QWidget):
         self.sql_data = read_from_sql(script)
         self.sql_data = self.sql_data.dropna(axis=1, how="all")
         self.fullData = self.fullData.append(self.sql_data)
-        self.fullData =  self.fullData.drop_duplicates()
+        self.fullData = self.fullData.drop_duplicates()
         self.resultWidget.setRowCount(len(self.fullData))
 
         for i in range(len(self.fullData)):
@@ -175,15 +189,16 @@ class ClassManagementWidget(QWidget):
         self.resultWidget.setHorizontalHeaderLabels(self.table_labels)
         self.resultWidget.resizeColumnsToContents()
         self.searchWidget.setRowCount(1)
-
-        for key, j in zip(self.sql_labels, range(len(self.sql_labels))):
+        sql_order = [1, 2, 4, 5, 6, 7, 8]
+        order = [0, 3, 9]
+        for key, j in zip(self.sql_labels, sql_order):
             a = QComboBox()
             a.addItem("Any")
             for label in self.sql_label_values[key]:
                 a.addItem(label[0])
-            self.searchWidget.setCellWidget(0, j+1, a)
+            self.searchWidget.setCellWidget(0, j, a)
 
-        for i in (0, 7, 8):
+        for i in order:
             a = QLineEdit()
             self.searchWidget.setCellWidget(0, i, a)
         self.searchWidget.resizeColumnsToContents()
@@ -224,30 +239,8 @@ class NewDataWindow(QWidget):
         self.sql_labels = ["Source", "Material", "Operator_RNA_Isolation", "Operator_PCR"]
         self.tableWidget.setHorizontalHeaderLabels(self.table_labels)
         self.sql_label_values = get_sql_labels(self.sql_labels)
-        # patient_ids, self.tissue_list, self.patient_table = parse_file(self.fname)
         self.patient_table = parse_file(self.fname)
         self.tableWidget.setRowCount(len(self.patient_table))
-
-        # todo: изменить структуру таблицы, теперь дата и даигноз получаются из файла, combobox'ы на 1 вправо
-        # for i in range(len(self.patient_table)):
-        #     self.tableWidget.setItem(i, 0, QTableWidgetItem(patient_ids[i]))
-        #     self.tableWidget.setItem(i, 1, QTableWidgetItem(self.tissue_list[i]))
-        #     # todo: здесь значение диагноза из файла
-        #     a = QComboBox()
-        #     a.addItem("HSIL")
-        #     a.addItem("LSIL")
-        #     self.tableWidget.setCellWidget(i, 2, a)
-        #     for key, j in zip(self.sql_labels, range(len(self.sql_labels))):
-        #         a = QComboBox()
-        #         for label in self.sql_label_values[key]:
-        #             a.addItem(label[0])
-        #         a.addItem("Add new...")
-        #         a.activated.connect(self.addNewLabel)
-        #         self.tableWidget.setCellWidget(i, j+3, a)
-        #     self.tableWidget.setCellWidget(i, 7, QLineEdit())
-        #     # todo: вместо lineedit здесь значение даты из файла
-        #     self.tableWidget.setCellWidget(i, 8, QLineEdit())
-        # self.tableWidget.resizeColumnsToContents()
 
         for i in self.patient_table.index:
             for j, column in zip(range(0, 5), self.patient_table.columns):
@@ -325,7 +318,7 @@ class NewDataWindow(QWidget):
         additional_data = pd.DataFrame(additional_data_dict)
         for i, label in zip(range(len(additional_data.columns)), additional_data.columns):
             self.patient_table.insert(len(self.patient_table.columns), label, additional_data[label])
-        # self.patient_table.insert(1, "Tissue", self.tissue_list)
+        alter_new_columns(self.patient_table)
         save_to_sql(self.patient_table)
 
 
@@ -384,7 +377,6 @@ class ResultsWindow(QWidget):
         norm_data = self.normalization(raw_data)
         self.fpr, self.tpr, self.threshold, self.roc_auc = self.roc_analyze(norm_data)
         roc_list = self.sort_dictionary_by_value(self.roc_auc)
-        # self.draw_roc_curve(fpr, tpr, roc_auc, norm_data.columns[2:5])
 
         layout = QGridLayout()
         self.table = QTableWidget()
@@ -411,7 +403,6 @@ class ResultsWindow(QWidget):
         self.draw_roc_curve(self.fpr, self.tpr, self.roc_auc, picked_values)
 
     def normalization(self, raw_data):
-        # todo: убрать bin_diagnosis и тогда код можно не менять
         column_names = list(raw_data)
         norm_data = pd.DataFrame(raw_data, columns=raw_data.columns[:11])
         for divident in column_names[11:]:
