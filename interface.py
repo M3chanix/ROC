@@ -92,7 +92,7 @@ def alter_new_columns(patient_data):
     for column in patient_data.columns:
         new_labels.add(column)
 
-    con = sql.connect("Data.db")
+    con = sql.connect("C:/ROC/Data.db")
     cur = con.cursor()
     cur.execute("PRAGMA table_info(Patient_data)")
     data = cur.fetchall()
