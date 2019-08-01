@@ -10,7 +10,7 @@ from sklearn import metrics
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QAction, QFileDialog, QComboBox, QPushButton, \
     QGridLayout, QLabel, QTableWidget, QTableWidgetItem, QLineEdit, QInputDialog, QDialog, QCheckBox, QHBoxLayout, \
-    QVBoxLayout
+    QVBoxLayout, QMessageBox
 os.chdir("C://ROC")
 
 
@@ -24,42 +24,57 @@ def tuple_to_string(tuple_list):
 def parse_file(fname):
     normalizators = ["Blank (H2O)", "UniSp2", "UniSp3 IPC", "UniSp4", "UniSp5", "UniSp6"]
 
-    wb = xlrd.open_workbook(fname)
-    sheet = wb.sheet_by_index(0)
-    file_name = sheet.cell_value(0, 1)
-    date = sheet.cell_value(5, 1)
-    date_object = datetime.strptime(date[:-4], "%m/%d/%Y %H:%M:%S")
-    date = date_object.strftime("%Y-%m-%d %H:%M:%S")
-    df = pd.read_excel(fname, skiprows=19)
+    try:
+        wb = xlrd.open_workbook(fname)
+    except FileNotFoundError:
+        notFoundMsgBox = QMessageBox()
+        notFoundMsgBox.setText("Файл не найден")
+        notFoundMsgBox.exec()
+    else:
+        sheet = wb.sheet_by_index(0)
+        file_name = sheet.cell_value(0, 1)
+        date = sheet.cell_value(5, 1)
+        date_object = datetime.strptime(date[:-4], "%m/%d/%Y %H:%M:%S")
+        date = date_object.strftime("%Y-%m-%d %H:%M:%S")
+        df = pd.read_excel(fname, skiprows=19)
 
-    # перемещение использованного файла в другую директорию
-    new_path = "C://py1//group_both_files_used//"
-    slash_pointer = 0
-    for symbol, i in zip(fname, range(len(fname))):
-        if symbol == "/":
-            slash_pointer = i
-    only_file_name = fname[slash_pointer+1:]
-    new_file = new_path + only_file_name
-    os.rename(fname, new_file)
+        # перемещение использованного файла в другую директорию
+        new_path = "C://py1//group_both_files_used//"
+        slash_pointer = 0
+        for symbol, i in zip(fname, range(len(fname))):
+            if symbol == "/":
+                slash_pointer = i
+        only_file_name = fname[slash_pointer+1:]
+        new_file = new_path + only_file_name
+        os.rename(fname, new_file)
 
-    df["Date"] = date
-    df["File"] = file_name
-    df = df.rename(index=str, columns={"Ds": "Diagnosis"})
-    # ниже может быть columns=["miRNA"], проблемы с единым форматом файла
-    df_new = pd.pivot_table(df, index=["Sample", "Tissue", "Diagnosis", "Date", "File"], columns=["miR"])
-    df_new.columns = df_new.columns.get_level_values(1)
-    df_new = df_new.reset_index(level=[0, 1, 2, 3, 4])
-    for normalizator in normalizators:
-        try:
-            df_new = df_new.drop(columns=normalizator)
-        except KeyError:
-            pass
-    return df_new
+        df["Date"] = date
+        df["File"] = file_name
+        df = df.rename(index=str, columns={"Ds": "Diagnosis"})
+        # ниже может быть columns=["miRNA"], проблемы с единым форматом файла
+        df_new = pd.pivot_table(df, index=["Sample", "Tissue", "Diagnosis", "Date", "File"], columns=["miR"])
+        df_new.columns = df_new.columns.get_level_values(1)
+        df_new = df_new.reset_index(level=[0, 1, 2, 3, 4])
+        for normalizator in normalizators:
+            try:
+                df_new = df_new.drop(columns=normalizator)
+            except KeyError:
+                pass
+        return df_new
 
 
 def save_to_sql(data):
     connection = sql.connect("C:/ROC/Data.db")
-    data.to_sql("Patient_data", connection, if_exists="append", index=False)
+    try:
+        data.to_sql("Patient_data", connection, if_exists="append", index=False)
+    except sql.IntegrityError:
+        failMsgBox = QMessageBox()
+        failMsgBox.setText("Этот файл уже добавлялся прежде")
+        failMsgBox.exec()
+    else:
+        successMsgBox = QMessageBox()
+        successMsgBox.setText("Данные успешно добавлены")
+        successMsgBox.exec()
     connection.close()
 
 
@@ -135,8 +150,8 @@ class SavedDataWindow(QWidget):
         self.show()
 
     def prepare_analyzis(self):
-        class1_data = self.class_management_widget1.fullData
-        class2_data = self.class_management_widget2.fullData
+        class1_data = self.class_management_widget1.get_checkbox_dataframe()
+        class2_data = self.class_management_widget2.get_checkbox_dataframe()
         class1_data.insert(0, "Class", 1)
         class2_data.insert(0, "Class", 0)
         result_data = class1_data.append(class2_data)
@@ -153,6 +168,37 @@ class ClassManagementWidget(QWidget):
         self.sql_label_values = sql_label_values
         self.name = name
         self.initUI()
+
+    def change_all_checkboxes(self):
+        tardet_state = not self.resultWidget.cellWidget(0, 0).isChecked()
+        for i in range(self.resultWidget.rowCount()):
+            self.resultWidget.cellWidget(i, 0).setChecked(tardet_state)
+
+    def get_checkbox_dataframe(self):
+        checked_df = pd.DataFrame(self.fullData)
+        for i in range(self.resultWidget.rowCount()):
+            if not self.resultWidget.cellWidget(i, 0).isChecked():
+                sample = self.resultWidget.cellWidget(i, 1).text()
+                file = self.resultWidget.cellWidget(i, 5).text()
+                checked_df = checked_df.drop(checked_df.loc[(checked_df["Sample"] == sample) & (checked_df["File"] == file)].index)
+        return checked_df
+
+    def clearSearchResults(self):
+        self.fullData = pd.DataFrame()
+        self.drawSearchResults()
+
+    def drawSearchResults(self):
+        self.resultWidget.setRowCount(len(self.fullData))
+
+        for i in range(len(self.fullData)):
+            a = QCheckBox()
+            a.setChecked(True)
+            self.resultWidget.setCellWidget(i, 0, a)
+            for j in range(len(self.table_labels)):
+                a = QLabel()
+                a.setText(str(self.fullData.iloc[i, j]))
+                self.resultWidget.setCellWidget(i, j + 1, a)
+        self.resultWidget.resizeColumnsToContents()
 
     def getSearcResults(self):
         script = """
@@ -184,21 +230,15 @@ class ClassManagementWidget(QWidget):
         self.sql_data = self.sql_data.dropna(axis=1, how="all")
         self.fullData = self.fullData.append(self.sql_data)
         self.fullData = self.fullData.drop_duplicates()
-        self.resultWidget.setRowCount(len(self.fullData))
-
-        for i in range(len(self.fullData)):
-            for j in range(len(self.table_labels)):
-                a = QLabel()
-                # todo: без приведения к интам не работало
-                a.setText(str(self.fullData.iloc[i, j]))
-                self.resultWidget.setCellWidget(i, j, a)
-        self.resultWidget.resizeColumnsToContents()
+        self.drawSearchResults()
 
     def createSearchWidget(self):
         self.searchWidget.setColumnCount(len(self.table_labels))
-        self.resultWidget.setColumnCount(len(self.table_labels))
+        self.resultWidget.setColumnCount(len(self.table_labels)+1)
         self.searchWidget.setHorizontalHeaderLabels(self.table_labels)
-        self.resultWidget.setHorizontalHeaderLabels(self.table_labels)
+        result_table_labels = list(self.table_labels)
+        result_table_labels.insert(0, "")
+        self.resultWidget.setHorizontalHeaderLabels(result_table_labels)
         self.resultWidget.resizeColumnsToContents()
         self.searchWidget.setRowCount(1)
         sql_order = [1, 2, 4, 5, 6, 7, 8]
@@ -226,13 +266,19 @@ class ClassManagementWidget(QWidget):
         processSearchButton = QPushButton("Добавить данные на обработку")
         # AnalyzeButton = QPushButton("Провести анализ")
         self.createSearchWidget()
-        self.grid_layout.addWidget(self.TextLabel)
-        self.grid_layout.addWidget(self.searchWidget)
-        self.grid_layout.addWidget(processSearchButton)
-        self.grid_layout.addWidget(self.resultWidget)
+        self.grid_layout.addWidget(self.TextLabel, 0, 0, 1, 2)
+        self.grid_layout.addWidget(self.searchWidget, 1, 0, 1, 2)
+        self.grid_layout.addWidget(processSearchButton, 2, 0, 1, 2)
+        self.grid_layout.addWidget(self.resultWidget, 3, 0, 1, 2)
+        checkboxesButton = QPushButton("Выбрать/Отменить все")
+        self.grid_layout.addWidget(checkboxesButton, 4, 0, 1, 1)
+        clearButton = QPushButton("Очистить")
+        self.grid_layout.addWidget(clearButton, 4, 1, 1, 1)
         # self.grid_layout.addWidget(AnalyzeButton)
 
         processSearchButton.clicked.connect(self.getSearcResults)
+        checkboxesButton.clicked.connect(self.change_all_checkboxes)
+        clearButton.clicked.connect(self.clearSearchResults)
         # AnalyzeButton.clicked.connect(self.prepareAnalyzis)
 
         self.setLayout(self.grid_layout)
@@ -328,10 +374,14 @@ class NewDataWindow(QWidget):
                     column_list.append(self.tableWidget.cellWidget(i, j).text())
             additional_data_dict[self.tableWidget.horizontalHeaderItem(j).text()] = column_list
         additional_data = pd.DataFrame(additional_data_dict)
-        for i, label in zip(range(len(additional_data.columns)), additional_data.columns):
-            self.patient_table.insert(len(self.patient_table.columns), label, additional_data[label])
-        alter_new_columns(self.patient_table)
-        save_to_sql(self.patient_table)
+        try:
+            for i, label in zip(range(len(additional_data.columns)), additional_data.columns):
+                self.patient_table.insert(len(self.patient_table.columns), label, additional_data[label])
+        except ValueError:
+            pass
+        else:
+            alter_new_columns(self.patient_table)
+            save_to_sql(self.patient_table)
 
 
 class FirstWindow(QWidget):
