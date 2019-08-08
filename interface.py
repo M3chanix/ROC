@@ -10,7 +10,7 @@ from sklearn import metrics
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QAction, QFileDialog, QComboBox, QPushButton, \
     QGridLayout, QLabel, QTableWidget, QTableWidgetItem, QLineEdit, QInputDialog, QDialog, QCheckBox, QHBoxLayout, \
-    QVBoxLayout, QMessageBox
+    QVBoxLayout, QMessageBox, QProgressDialog
 os.chdir("C://ROC")
 
 
@@ -384,6 +384,7 @@ class NewDataWindow(QWidget):
             save_to_sql(self.patient_table)
 
 
+
 class FirstWindow(QWidget):
     def NewDataClicked(self):
         new_data_window = NewDataWindow()
@@ -490,7 +491,7 @@ class ResultsWindow(QWidget):
         return list_of_sorted_pairs
 
     def draw_roc_curve(self, fpr, tpr, roc_auc, miRNA_names):
-        plt.figure()
+        fig = plt.figure()
         for i in miRNA_names:
             plt.plot(fpr[i], tpr[i], label="{0}; auc={1:0.2f}".format(i, roc_auc[i]))
         plt.plot([0, 1], [0, 1], 'k--')
@@ -499,7 +500,9 @@ class ResultsWindow(QWidget):
         plt.xlabel('False Positive Rate')
         plt.ylabel('True Positive Rate')
         plt.title('ROC curve')
-        plt.legend(loc="lower right")
+        plt.legend(loc="lower left", bbox_to_anchor=(1.05, 0))
+        plt.subplots_adjust(right=0.6)
+        fig.set_size_inches(10, 5)
         plt.show()
 
 
