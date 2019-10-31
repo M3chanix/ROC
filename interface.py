@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import xlrd
 from datetime import datetime
 from sklearn import metrics
+import time
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QAction, QFileDialog, QComboBox, QPushButton, \
     QGridLayout, QLabel, QTableWidget, QTableWidgetItem, QLineEdit, QInputDialog, QDialog, QCheckBox, QHBoxLayout, \
@@ -437,9 +438,11 @@ class ResultsWindow(QWidget):
         self.initUI(raw_data)
 
     def initUI(self, raw_data):
+        start = time.process_time()
         norm_data = self.normalization(raw_data)
         self.fpr, self.tpr, self.threshold, self.roc_auc = self.roc_analyze(norm_data)
         roc_list = self.sort_dictionary_by_value(self.roc_auc)
+        print(time.process_time() - start)
 
         layout = QGridLayout()
         self.table = QTableWidget()
@@ -466,12 +469,14 @@ class ResultsWindow(QWidget):
         self.draw_roc_curve(self.fpr, self.tpr, self.roc_auc, picked_values)
 
     def normalization(self, raw_data):
+        raw_data = raw_data.dropna(axis=1, how="all")
         column_names = list(raw_data)
         norm_data = pd.DataFrame(raw_data, columns=raw_data.columns[:11])
         for divident in column_names[11:]:
             for divider in column_names[11:]:
                 if divident != divider:
                     norm_data[divident + '/' + divider] = raw_data[divident] / raw_data[divider]
+        norm_data = norm_data.dropna(axis=1, how="all")
         norm_data = norm_data.fillna(0)
         return norm_data
 
@@ -487,8 +492,11 @@ class ResultsWindow(QWidget):
         return fpr, tpr, threshold, roc_auc
 
     def sort_dictionary_by_value(self, dictionary):
-        list_of_sorted_pairs = [(k, dictionary[k]) for k in sorted(dictionary.keys(), key=dictionary.get, reverse=True)]
-        return list_of_sorted_pairs
+        # list_of_sorted_pairs = [(k, dictionary[k]) for k in sorted(dictionary.keys(), key=dictionary.get, reverse=True)]
+        dictionary = list(dictionary.items())
+        dictionary.sort(key=lambda value: value[1])
+        # return list_of_sorted_pairs
+        return dictionary
 
     def draw_roc_curve(self, fpr, tpr, roc_auc, miRNA_names):
         fig = plt.figure()

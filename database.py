@@ -10,10 +10,10 @@ cur = con.cursor()
 # cur.execute("Insert into Patient_data(column_name) values(1)")
 # cur.execute("Select sql from sqlite_master where name = 'Patient_data';")
 # cur.execute("Drop table Patient_data")
-# cur.execute('Select * from Patient_data')
-# data = cur.fetchall()
-# for row in data:
-#     print(row)
+cur.execute('Select * from Patient_data')
+data = cur.fetchall()
+for row in data:
+    print(row)
 #     print(len(row))
 # print(set)
 # print(len(set))
@@ -54,7 +54,7 @@ UNIQUE(Sample, File));
 # script += ");"
 # print(script)
 
-cur.execute(script)
+# cur.execute(script)
 
 
 cur.close()
