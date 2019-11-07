@@ -492,11 +492,8 @@ class ResultsWindow(QWidget):
         return fpr, tpr, threshold, roc_auc
 
     def sort_dictionary_by_value(self, dictionary):
-        # list_of_sorted_pairs = [(k, dictionary[k]) for k in sorted(dictionary.keys(), key=dictionary.get, reverse=True)]
-        dictionary = list(dictionary.items())
-        dictionary.sort(key=lambda value: value[1])
-        # return list_of_sorted_pairs
-        return dictionary
+        list_of_sorted_pairs = [(k, dictionary[k]) for k in sorted(dictionary.keys(), key=dictionary.get, reverse=True)]
+        return list_of_sorted_pairs
 
     def draw_roc_curve(self, fpr, tpr, roc_auc, miRNA_names):
         fig = plt.figure()
