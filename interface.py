@@ -13,14 +13,6 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QAction, QFileDialog, QComboBox, QPushButton, \
     QGridLayout, QLabel, QTableWidget, QTableWidgetItem, QLineEdit, QInputDialog, QDialog, QCheckBox, QHBoxLayout, \
     QVBoxLayout, QMessageBox, QProgressDialog
-    #os.chdir("C://ROC")
-
-
-def tuple_to_string(tuple_list):
-    string_list = []
-    for i in range(len(tuple_list)):
-        string_list.append(tuple_list[i][0])
-    return string_list
 
 
 def parse_file(fname):
