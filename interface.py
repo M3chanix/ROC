@@ -41,7 +41,7 @@ def parse_file(fname):
         # перемещение использованного файла в другую директорию
         new_path = "./old_files/"
         slash_pointer = 0
-        for symbol, i in zip(fname, range(len(fname))):
+        for i, symbol in enumerate(fname):
             if symbol == "/":
                 slash_pointer = i
         only_file_name = fname[slash_pointer+1:]
@@ -183,11 +183,11 @@ class ClassManagementWidget(QWidget):
     def drawSearchResults(self):
         self.resultWidget.setRowCount(len(self.fullData))
 
-        for i in range(len(self.fullData)):
+        for i, _ in enumerate(self.fullData):
             a = QCheckBox()
             a.setChecked(True)
             self.resultWidget.setCellWidget(i, 0, a)
-            for j in range(len(self.table_labels)):
+            for j, _ in enumerate(self.table_labels):
                 a = QLabel()
                 a.setText(str(self.fullData.iloc[i, j]))
                 self.resultWidget.setCellWidget(i, j + 1, a)
@@ -360,7 +360,7 @@ class NewDataWindow(QWidget):
             additional_data_dict[self.tableWidget.horizontalHeaderItem(j).text()] = column_list
         additional_data = pd.DataFrame(additional_data_dict)
         try:
-            for i, label in zip(range(len(additional_data.columns)), additional_data.columns):
+            for label in additional_data.columns:
                 self.patient_table.insert(len(self.patient_table.columns), label, additional_data[label])
         except ValueError:
             pass
@@ -434,10 +434,10 @@ class ResultsWindow(QWidget):
         self.setLayout(layout)
         self.table.setColumnCount(3)
         self.table.setRowCount(len(roc_list))
-        for i, pair in zip(range(len(roc_list)), roc_list):
+        for i, pair in enumerate(roc_list):
             c = QCheckBox()
-            self.table.setItem(i, 0, QTableWidgetItem(roc_list[i][0]))
-            self.table.setItem(i, 1, QTableWidgetItem(str(roc_list[i][1])))
+            self.table.setItem(i, 0, QTableWidgetItem(pair[0]))
+            self.table.setItem(i, 1, QTableWidgetItem(str(pair[1])))
             self.table.setCellWidget(i, 2, c)
         self.table.resizeColumnsToContents()
         draw_button = QPushButton("Построить график")
