@@ -12,7 +12,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QAction, QFileDialog, QComboBox, QPushButton, \
     QGridLayout, QLabel, QTableWidget, QTableWidgetItem, QLineEdit, QInputDialog, QDialog, QCheckBox, QHBoxLayout, \
     QVBoxLayout, QMessageBox, QProgressDialog
-os.chdir("C://ROC")
+    #os.chdir("C://ROC")
 
 
 def tuple_to_string(tuple_list):
@@ -40,7 +40,7 @@ def parse_file(fname):
         df = pd.read_excel(fname, skiprows=19)
 
         # перемещение использованного файла в другую директорию
-        new_path = "C://py1//group_both_files_used//"
+        new_path = "./old_files/"
         slash_pointer = 0
         for symbol, i in zip(fname, range(len(fname))):
             if symbol == "/":
@@ -65,7 +65,7 @@ def parse_file(fname):
 
 
 def save_to_sql(data):
-    connection = sql.connect("C:/ROC/Data.db")
+    connection = sql.connect("Data.db")
     try:
         data.to_sql("Patient_data", connection, if_exists="append", index=False)
     except sql.IntegrityError:
@@ -80,7 +80,7 @@ def save_to_sql(data):
 
 
 def read_from_sql(script):
-    connection = sql.connect("C:/ROC/Data.db")
+    connection = sql.connect("Data.db")
     sql_data = pd.read_sql(script, connection)
     connection.close()
 
@@ -89,7 +89,7 @@ def read_from_sql(script):
 
 def get_sql_labels(sql_labels):
     sql_label_values = {}
-    connection = sql.connect("C:/ROC/Data.db")
+    connection = sql.connect("Data.db")
     cursor = connection.cursor()
     query_part1 = "select distinct "
     query_part2 = " from Patient_data"
@@ -108,7 +108,7 @@ def alter_new_columns(patient_data):
     for column in patient_data.columns:
         new_labels.add(column)
 
-    con = sql.connect("C:/ROC/Data.db")
+    con = sql.connect("Data.db")
     cur = con.cursor()
     cur.execute("PRAGMA table_info(Patient_data)")
     data = cur.fetchall()
@@ -341,7 +341,7 @@ class NewDataWindow(QWidget):
         self.fname = fname
 
     def get_sql_labels(self):
-        connection = sql.connect("C:/ROC/Data.db")
+        connection = sql.connect("Data.db")
         cursor = connection.cursor()
         query_part1 = "select distinct "
         query_part2 = " from Patient_data"
