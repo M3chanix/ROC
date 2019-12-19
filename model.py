@@ -19,7 +19,7 @@ class Sample(Base):
     RNA_Concentration      = Column(REAL, nullable=False)
 
     hsa_let_7b_5p    = Column('hsa-let-7b-5p',    REAL)
-    hsa_miR__125b_5p = Column('hsa-miR -125b-5p',  REAL)
+    hsa_miR__125b_5p = Column('hsa-miR -125b-5p', REAL)
     hsa_miR_375_3p   = Column('hsa-miR-375-3p',   REAL)
     hsa_miR_1246_5p  = Column('hsa-miR-1246-5p',  REAL)
     hsa_miR_21_5p    = Column('hsa-miR-21-5p',    REAL)
