@@ -332,19 +332,6 @@ class NewDataWindow(QWidget):
         self.fnameLabel.setText("Выбранный файл: {}".format(fname))
         self.fname = fname
 
-    def get_sql_labels(self):
-        connection = sql.connect("Data.db")
-        cursor = connection.cursor()
-        query_part1 = "select distinct "
-        query_part2 = " from Patient_data"
-        for label in self.sql_labels:
-            query = query_part1+label+query_part2
-            cursor.execute(query)
-            self.sql_label_values[label] = cursor.fetchall()
-
-        cursor.close()
-        connection.close()
-
     def addNewLabel(self, e):
         if e == self.sender().count()-1:
             text, ok = QInputDialog.getText(self, 'Добавление поля', 'Введите элемент для добавления')
