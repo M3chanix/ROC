@@ -183,7 +183,7 @@ class ClassManagementWidget(QWidget):
     def drawSearchResults(self):
         self.resultWidget.setRowCount(len(self.fullData))
 
-        for i, _ in enumerate(self.fullData):
+        for i in range(len(self.fullData)):
             a = QCheckBox()
             a.setChecked(True)
             self.resultWidget.setCellWidget(i, 0, a)
