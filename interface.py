@@ -81,17 +81,10 @@ def save_to_sql(data):
 
 def get_sql_labels(sql_labels):
     sql_label_values = {}
-    connection = sql.connect("Data.db")
-    cursor = connection.cursor()
-    query_part1 = "select distinct "
-    query_part2 = " from Patient_data"
     for label in sql_labels:
-        query = query_part1+label+query_part2
-        cursor.execute(query)
-        sql_label_values[label] = [i[0] for i in cursor.fetchall()]
+        query = session.query(label).distinct()
+        sql_label_values[label] = [i[0] for i in query]
 
-    cursor.close()
-    connection.close()
     return sql_label_values
 
 
@@ -122,8 +115,15 @@ class SavedDataWindow(QWidget):
         self.table_labels = ["Sample", "Tissue", "Diagnosis", "Date", "File", "Source", "Material",
                              "Operator_RNA_Isolation",
                              "Operator_PCR", "RNA_Concentration"]
-        self.sql_labels = ["Tissue", "Diagnosis", "File", "Source", "Material", "Operator_RNA_Isolation",
-                           "Operator_PCR"]
+        self.sql_labels = [
+            Sample.Tissue,
+            Sample.Diagnosis,
+            Sample.File,
+            Sample.Source,
+            Sample.Material,
+            Sample.Operator_RNA_Isolation,
+            Sample.Operator_PCR,
+        ]
         self.sql_label_values = get_sql_labels(self.sql_labels)
         self.initUI()
 
@@ -287,7 +287,12 @@ class NewDataWindow(QWidget):
         self.tableWidget.setColumnCount(10)
         self.table_labels = ["Sample", "Tissue", "Diagnosis", "Date", "File", "Source", "Material", "Operator_RNA_Isolation",
              "Operator_PCR", "RNA_Concentration"]
-        self.sql_labels = ["Source", "Material", "Operator_RNA_Isolation", "Operator_PCR"]
+        self.sql_labels = [
+            Sample.Source,
+            Sample.Material,
+            Sample.Operator_RNA_Isolation,
+            Sample.Operator_PCR,
+        ]
         self.tableWidget.setHorizontalHeaderLabels(self.table_labels)
         self.sql_label_values = get_sql_labels(self.sql_labels)
         self.patient_table = parse_file(self.fname)
