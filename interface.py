@@ -16,7 +16,6 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QAction, QFileDi
 
 
 def parse_file(fname):
-    normalizators = ["Blank (H2O)", "UniSp2", "UniSp3 IPC", "UniSp4", "UniSp5", "UniSp6"]
 
     try:
         wb = xlrd.open_workbook(fname)
@@ -49,6 +48,7 @@ def parse_file(fname):
         df_new = pd.pivot_table(df, index=["Sample", "Tissue", "Diagnosis", "Date", "File"], columns=["miR"])
         df_new.columns = df_new.columns.get_level_values(1)
         df_new = df_new.reset_index(level=[0, 1, 2, 3, 4])
+        normalizators = ["Blank (H2O)", "UniSp2", "UniSp3 IPC", "UniSp4", "UniSp5", "UniSp6"]
         for normalizator in normalizators:
             try:
                 df_new = df_new.drop(columns=normalizator)
