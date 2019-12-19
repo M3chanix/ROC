@@ -88,7 +88,7 @@ def get_sql_labels(sql_labels):
     for label in sql_labels:
         query = query_part1+label+query_part2
         cursor.execute(query)
-        sql_label_values[label] = cursor.fetchall()
+        sql_label_values[label] = [i[0] for i in cursor.fetchall()]
 
     cursor.close()
     connection.close()
@@ -240,7 +240,7 @@ class ClassManagementWidget(QWidget):
             a = QComboBox()
             a.addItem("Any")
             for label in self.sql_label_values[key]:
-                a.addItem(label[0])
+                a.addItem(label)
             self.searchWidget.setCellWidget(0, j, a)
 
         for i in order:
@@ -299,7 +299,7 @@ class NewDataWindow(QWidget):
             for key, j in zip(self.sql_labels, range(len(self.sql_labels))):
                 a = QComboBox()
                 for label in self.sql_label_values[key]:
-                    a.addItem(label[0])
+                    a.addItem(label)
                 a.addItem("Add new...")
                 a.activated.connect(self.addNewLabel)
                 self.tableWidget.setCellWidget(i, j+5, a)
