@@ -2,6 +2,9 @@
 import sys
 import os
 import sqlite3 as sql
+from model import Sample
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -505,6 +508,8 @@ class ResultsWindow(QWidget):
 
 
 if __name__ == '__main__':
+    Session = sessionmaker(bind=create_engine('sqlite:///Data.db'))
+    session = Session()
     app = QApplication(sys.argv)
     main_window = MainWindow()
     sys.exit(app.exec_())
