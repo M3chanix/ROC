@@ -296,7 +296,7 @@ class NewDataWindow(QWidget):
         for i in self.patient_table.index:
             for j, column in zip(range(0, 5), self.patient_table.columns):
                 self.tableWidget.setItem(i, j, QTableWidgetItem(self.patient_table.iloc[i][column]))
-            for key, j in zip(self.sql_labels, range(len(self.sql_labels))):
+            for j, key in enumerate(self.sql_labels):
                 a = QComboBox()
                 for label in self.sql_label_values[key]:
                     a.addItem(label)
