@@ -3,6 +3,7 @@ import sys
 import os
 import sqlite3 as sql
 from model import Sample
+from sqlalchemy.orm.session import Session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import numpy as np
@@ -17,6 +18,9 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QAction, QFileDi
     QGridLayout, QLabel, QTableWidget, QTableWidgetItem, QLineEdit, QInputDialog, QDialog, QCheckBox, QHBoxLayout, \
     QVBoxLayout, QMessageBox, QProgressDialog
 
+engine = create_engine('sqlite:///Data.db')
+MySession = sessionmaker(bind=engine)
+session: Session  = MySession()
 
 def parse_file(fname):
 
@@ -73,14 +77,6 @@ def save_to_sql(data):
         successMsgBox.setText("Данные успешно добавлены")
         successMsgBox.exec()
     connection.close()
-
-
-def read_from_sql(script):
-    connection = sql.connect("Data.db")
-    sql_data = pd.read_sql(script, connection)
-    connection.close()
-
-    return sql_data
 
 
 def get_sql_labels(sql_labels):
@@ -198,33 +194,33 @@ class ClassManagementWidget(QWidget):
         self.resultWidget.resizeColumnsToContents()
 
     def getSearcResults(self):
-        script = """
-        Select * From Patient_data
-        """
+        query = session.query(Sample)
 
-        queryValues = []
         sql_order = [1, 2, 4, 5, 6, 7, 8]
         order = [0, 3, 9]
+        columns = [
+            Sample.Sample,
+            Sample.Tissue,
+            Sample.Diagnosis,
+            Sample.Date,
+            Sample.File,
+            Sample.Source,
+            Sample.Material,
+            Sample.Operator_RNA_Isolation,
+            Sample.Operator_PCR,
+            Sample.RNA_Concentration,
+        ]
         for i in order:
             current_value = self.searchWidget.cellWidget(0, i).text()
-            if current_value != "":
-                queryValues.append('{} = "{}"'.format(self.table_labels[i], current_value))
+            if current_value:
+                query = query.filter(columns[i] == current_value)
 
         for i in sql_order:
             current_value = self.searchWidget.cellWidget(0, i).currentText()
             if current_value != "Any":
-                queryValues.append('{} = "{}"'.format(self.table_labels[i], current_value))
+                query = query.filter(columns[i] == current_value)
 
-        if len(queryValues) > 0:
-            script += " where"
-            for value in queryValues:
-                script += " "
-                script += value
-                script += " and"
-            script = script[:-3]
-
-        self.sql_data = read_from_sql(script)
-        self.sql_data = self.sql_data.dropna(axis=1, how="all")
+        self.sql_data: pd.DataFrame = pd.read_sql(query.statement, session.bind).dropna(axis=1, how="all")
         self.fullData = self.fullData.append(self.sql_data)
         self.fullData = self.fullData.drop_duplicates()
         self.drawSearchResults()
@@ -508,8 +504,6 @@ class ResultsWindow(QWidget):
 
 
 if __name__ == '__main__':
-    Session = sessionmaker(bind=create_engine('sqlite:///Data.db'))
-    session = Session()
     app = QApplication(sys.argv)
     main_window = MainWindow()
     sys.exit(app.exec_())
