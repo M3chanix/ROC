@@ -443,8 +443,7 @@ class ResultsWindow(QWidget):
 
     @staticmethod
     def sort_dictionary_by_value(dictionary: dict):
-        list_of_sorted_pairs = [(k, dictionary[k]) for k in sorted(dictionary.keys(), key=dictionary.get, reverse=True)]
-        return list_of_sorted_pairs
+        return sorted(dictionary.items(), key=lambda pair: pair[1], reverse=True)
 
     @staticmethod
     def draw_roc_curve(fpr, tpr, roc_auc, miRNA_names):
