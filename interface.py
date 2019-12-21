@@ -332,11 +332,14 @@ class NewDataWindow(QWidget):
 
 
 class FirstWindow(QWidget):
-    def NewDataClicked(self):
+
+    @staticmethod
+    def NewDataClicked():
         new_data_window = NewDataWindow()
         main_window.setCentralWidget(new_data_window)
 
-    def SavedDataClicked(self):
+    @staticmethod
+    def SavedDataClicked():
         saved_data_window = SavedDataWindow()
         main_window.setCentralWidget(saved_data_window)
 
@@ -413,7 +416,8 @@ class ResultsWindow(QWidget):
 
         self.draw_roc_curve(self.fpr, self.tpr, self.roc_auc, picked_values)
 
-    def normalization(self, raw_data: pandas.DataFrame) -> pandas.DataFrame:
+    @staticmethod
+    def normalization(raw_data: pandas.DataFrame) -> pandas.DataFrame:
         raw_data = raw_data.dropna(axis=1, how="all")
         column_names = list(raw_data)
         norm_data = pandas.DataFrame(raw_data, columns=raw_data.columns[:11])
@@ -425,22 +429,25 @@ class ResultsWindow(QWidget):
         norm_data = norm_data.fillna(0)
         return norm_data
 
-    def roc_analyze(self, norm_data: pandas.DataFrame):
-        fpr = dict()
-        tpr = dict()
-        threshold = dict()
-        roc_auc = dict()
+    @staticmethod
+    def roc_analyze(norm_data: pandas.DataFrame):
+        fpr = {}
+        tpr = {}
+        threshold = {}
+        roc_auc = {}
         for i in norm_data.columns[11:]:
             fpr[i], tpr[i], threshold[i] = metrics.roc_curve(norm_data["Class"], norm_data[i])
             roc_auc[i] = metrics.auc(fpr[i], tpr[i])
 
         return fpr, tpr, threshold, roc_auc
 
-    def sort_dictionary_by_value(self, dictionary):
+    @staticmethod
+    def sort_dictionary_by_value(dictionary: dict):
         list_of_sorted_pairs = [(k, dictionary[k]) for k in sorted(dictionary.keys(), key=dictionary.get, reverse=True)]
         return list_of_sorted_pairs
 
-    def draw_roc_curve(self, fpr, tpr, roc_auc, miRNA_names):
+    @staticmethod
+    def draw_roc_curve(fpr, tpr, roc_auc, miRNA_names):
         fig = plt.figure()
         for i in miRNA_names:
             plt.plot(fpr[i], tpr[i], label="{0}; auc={1:0.2f}".format(i, roc_auc[i]))
