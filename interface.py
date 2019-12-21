@@ -4,21 +4,24 @@ from typing import Dict
 
 import sys
 import os
+import time
+from datetime import datetime
+
 import sqlite3
 from sqlalchemy.orm.session import Session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-import numpy
-import pandas
-import matplotlib.pyplot as plt
 import xlrd
-from datetime import datetime
-from sklearn import metrics
-import time
+
+import matplotlib.pyplot as plt
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QAction, QFileDialog, QComboBox, QPushButton, \
     QGridLayout, QLabel, QTableWidget, QTableWidgetItem, QLineEdit, QInputDialog, QDialog, QCheckBox, QHBoxLayout, \
     QVBoxLayout, QMessageBox, QProgressDialog
+
+import numpy
+import pandas
+from sklearn import metrics
 
 from model import Sample
 from parser import parse_file
