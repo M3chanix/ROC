@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 import sys
 import os
-import sqlite3 as sql
+import sqlite3
 from sqlalchemy.orm.session import Session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-import numpy as np
-import pandas as pd
+import numpy
+import pandas
 import matplotlib.pyplot as plt
 import xlrd
 from datetime import datetime
@@ -26,10 +26,10 @@ session: Session  = MySession()
 
 
 def save_to_sql(data):
-    connection = sql.connect("Data.db")
+    connection = sqlite3.connect("Data.db")
     try:
         data.to_sql("Patient_data", connection, if_exists="append", index=False)
-    except sql.IntegrityError:
+    except sqlite3.IntegrityError:
         failMsgBox = QMessageBox()
         failMsgBox.setText("Этот файл уже добавлялся прежде")
         failMsgBox.exec()
@@ -54,7 +54,7 @@ def alter_new_columns(patient_data):
     for column in patient_data.columns:
         new_labels.add(column)
 
-    con = sql.connect("Data.db")
+    con = sqlite3.connect("Data.db")
     cur = con.cursor()
     cur.execute("PRAGMA table_info(Patient_data)")
     data = cur.fetchall()
@@ -129,7 +129,7 @@ class ClassManagementWidget(QWidget):
             self.resultWidget.cellWidget(i, 0).setChecked(tardet_state)
 
     def get_checkbox_dataframe(self):
-        checked_df = pd.DataFrame(self.fullData)
+        checked_df = pandas.DataFrame(self.fullData)
         for i in range(self.resultWidget.rowCount()):
             if not self.resultWidget.cellWidget(i, 0).isChecked():
                 sample = self.resultWidget.cellWidget(i, 1).text()
@@ -138,7 +138,7 @@ class ClassManagementWidget(QWidget):
         return checked_df
 
     def clearSearchResults(self):
-        self.fullData = pd.DataFrame()
+        self.fullData = pandas.DataFrame()
         self.drawSearchResults()
 
     def drawSearchResults(self):
@@ -181,7 +181,7 @@ class ClassManagementWidget(QWidget):
             if current_value != "Any":
                 query = query.filter(columns[i] == current_value)
 
-        self.sql_data: pd.DataFrame = pd.read_sql(query.statement, session.bind).dropna(axis=1, how="all")
+        self.sql_data: pandas.DataFrame = pandas.read_sql(query.statement, session.bind).dropna(axis=1, how="all")
         self.fullData = self.fullData.append(self.sql_data)
         self.fullData = self.fullData.drop_duplicates()
         self.drawSearchResults()
@@ -214,7 +214,7 @@ class ClassManagementWidget(QWidget):
         self.grid_layout = QGridLayout()
         self.searchWidget = QTableWidget()
         self.resultWidget = QTableWidget()
-        self.fullData = pd.DataFrame()
+        self.fullData = pandas.DataFrame()
 
         self.TextLabel = QLabel(self.name)
         processSearchButton = QPushButton("Добавить данные на обработку")
@@ -319,7 +319,7 @@ class NewDataWindow(QWidget):
                 else:
                     column_list.append(self.tableWidget.cellWidget(i, j).text())
             additional_data_dict[self.tableWidget.horizontalHeaderItem(j).text()] = column_list
-        additional_data = pd.DataFrame(additional_data_dict)
+        additional_data = pandas.DataFrame(additional_data_dict)
         try:
             for label in additional_data.columns:
                 self.patient_table.insert(len(self.patient_table.columns), label, additional_data[label])
@@ -416,7 +416,7 @@ class ResultsWindow(QWidget):
     def normalization(self, raw_data):
         raw_data = raw_data.dropna(axis=1, how="all")
         column_names = list(raw_data)
-        norm_data = pd.DataFrame(raw_data, columns=raw_data.columns[:11])
+        norm_data = pandas.DataFrame(raw_data, columns=raw_data.columns[:11])
         for divident in column_names[11:]:
             for divider in column_names[11:]:
                 if divident != divider:
