@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+
+from typing import Dict
+
 import sys
 import os
 import sqlite3
@@ -379,6 +382,15 @@ class MainWindow(QMainWindow):
         self.show()
 
 
+class ROC_curve_data:
+
+    def __init__(self, fpr: numpy.ndarray, tpr: numpy.ndarray, threshold: numpy.ndarray, auc: float):
+        self.fpr : numpy.ndarray = fpr
+        self.tpr : numpy.ndarray = tpr
+        self.threshold : numpy.ndarray = threshold
+        self.auc : float = auc
+
+
 class ResultsWindow(QWidget):
 
     def __init__(self, raw_data: pandas.DataFrame):
@@ -388,8 +400,7 @@ class ResultsWindow(QWidget):
     def initUI(self, raw_data: pandas.DataFrame):
         start = time.process_time()
         norm_data = self.normalization(raw_data)
-        self.fprs, self.tprs, self.thresholds, self.roc_aucs = self.roc_analyze(norm_data)
-        roc_list = self.sort_dictionary_by_value(self.roc_aucs)
+        self.roc_data = self.roc_analyze(norm_data)
         print(time.process_time() - start)
 
         layout = QGridLayout()
@@ -397,11 +408,12 @@ class ResultsWindow(QWidget):
         layout.addWidget(self.table)
         self.setLayout(layout)
         self.table.setColumnCount(3)
-        self.table.setRowCount(len(roc_list))
-        for i, pair in enumerate(roc_list):
+        self.table.setRowCount(len(self.roc_data))
+        value: ROC_curve_data
+        for i, (key, value) in enumerate(sorted(self.roc_data.items(), key=lambda pair: pair[1].auc, reverse=True)):
             c = QCheckBox()
-            self.table.setItem(i, 0, QTableWidgetItem(pair[0]))
-            self.table.setItem(i, 1, QTableWidgetItem(str(pair[1])))
+            self.table.setItem(i, 0, QTableWidgetItem(key))
+            self.table.setItem(i, 1, QTableWidgetItem(str(value.auc)))
             self.table.setCellWidget(i, 2, c)
         self.table.resizeColumnsToContents()
         draw_button = QPushButton("Построить график")
@@ -414,7 +426,7 @@ class ResultsWindow(QWidget):
             if self.table.cellWidget(i, 2).isChecked():
                 picked_values.append(self.table.item(i, 0).text())
 
-        self.draw_roc_curve(self.fprs, self.tprs, self.roc_aucs, picked_values)
+        self.draw_roc_curve(self.roc_data, picked_values)
 
     @staticmethod
     def normalization(raw_data: pandas.DataFrame) -> pandas.DataFrame:
@@ -430,26 +442,19 @@ class ResultsWindow(QWidget):
         return norm_data
 
     @staticmethod
-    def roc_analyze(norm_data: pandas.DataFrame):
-        fprs = {}
-        tprs = {}
-        thresholds = {}
-        roc_aucs = {}
+    def roc_analyze(norm_data: pandas.DataFrame) -> Dict[str, ROC_curve_data]:
+        result = {}
         for i in norm_data.columns[11:]:
-            fprs[i], tprs[i], thresholds[i] = metrics.roc_curve(norm_data["Class"], norm_data[i])
-            roc_aucs[i] = metrics.auc(fprs[i], tprs[i])
-
-        return fprs, tprs, thresholds, roc_aucs
-
-    @staticmethod
-    def sort_dictionary_by_value(dictionary: dict):
-        return sorted(dictionary.items(), key=lambda pair: pair[1], reverse=True)
+            fpr, tpr, threshold = metrics.roc_curve(norm_data["Class"], norm_data[i])
+            roc_auc = metrics.auc(fpr, tpr)
+            result[i] = ROC_curve_data(fpr=fpr, tpr=tpr, threshold=threshold, auc=roc_auc)
+        return result
 
     @staticmethod
-    def draw_roc_curve(fprs, tprs, roc_aucs, miRNA_names):
+    def draw_roc_curve(roc_data: Dict[str, ROC_curve_data], miRNA_names):
         fig = plt.figure()
-        for i in miRNA_names:
-            plt.plot(fprs[i], tprs[i], label="{0}; auc={1:0.2f}".format(i, roc_aucs[i]))
+        for name in miRNA_names:
+            plt.plot(roc_data[name].fpr, roc_data[name].tpr, label="{0}; auc={1:0.2f}".format(name, roc_data[name].auc))
         plt.plot([0, 1], [0, 1], 'k--')
         plt.xlim([0.0, 1.0])
         plt.ylim([0.0, 1.05])
