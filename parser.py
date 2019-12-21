@@ -1,8 +1,9 @@
 import os
-import pandas as pd
+import pandas
 import xlrd
 from datetime import datetime
 
+from PyQt5.QtWidgets import QMessageBox
 
 def parse_file(fname):
     try:
@@ -17,7 +18,7 @@ def parse_file(fname):
         date = sheet.cell_value(5, 1)
         date_object = datetime.strptime(date[:-4], "%m/%d/%Y %H:%M:%S")
         date = date_object.strftime("%Y-%m-%d %H:%M:%S")
-        df = pd.read_excel(fname, skiprows=19)
+        df = pandas.read_excel(fname, skiprows=19)
 
         # перемещение использованного файла в другую директорию
         new_path = "./old_files/"
@@ -33,7 +34,7 @@ def parse_file(fname):
         df["File"] = file_name
         df = df.rename(index=str, columns={"Ds": "Diagnosis"})
         # ниже может быть columns=["miRNA"], проблемы с единым форматом файла
-        df_new = pd.pivot_table(df, index=["Sample", "Tissue", "Diagnosis", "Date", "File"], columns=["miR"])
+        df_new = pandas.pivot_table(df, index=["Sample", "Tissue", "Diagnosis", "Date", "File"], columns=["miR"])
         df_new.columns = df_new.columns.get_level_values(1)
         df_new = df_new.reset_index(level=[0, 1, 2, 3, 4])
         normalizators = ["Blank (H2O)", "UniSp2", "UniSp3 IPC", "UniSp4", "UniSp5", "UniSp6"]
