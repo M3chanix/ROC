@@ -22,6 +22,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QAction, QFileDi
 import numpy
 import pandas
 from sklearn import metrics
+from itertools import permutations
 
 from model import Sample
 from parser import parse_file
@@ -436,10 +437,8 @@ class ResultsWindow(QWidget):
         raw_data = raw_data.dropna(axis=1, how="all")
         column_names = list(raw_data)
         norm_data = pandas.DataFrame(raw_data, columns=raw_data.columns[:11])
-        for divident in column_names[11:]:
-            for divider in column_names[11:]:
-                if divident != divider:
-                    norm_data[divident + '/' + divider] = raw_data[divident] / raw_data[divider]
+        for divident, divider in permutations(column_names[11:], 2):
+            norm_data[divident + '/' + divider] = raw_data[divident] / raw_data[divider]
         norm_data = norm_data.dropna(axis=1, how="all")
         norm_data = norm_data.fillna(0)
         return norm_data
