@@ -108,7 +108,7 @@ class SavedDataWindow(QWidget):
         class2_data = self.class_management_widget2.get_checkbox_dataframe()
         class1_data.insert(0, "Class", 1)
         class2_data.insert(0, "Class", 0)
-        result_data = class1_data.append(class2_data)
+        result_data: pandas.DataFrame = class1_data.append(class2_data)
         results_widget = ResultsWindow(result_data)
         main_window.setCentralWidget(results_widget)
 
@@ -128,7 +128,7 @@ class ClassManagementWidget(QWidget):
         for i in range(self.resultWidget.rowCount()):
             self.resultWidget.cellWidget(i, 0).setChecked(tardet_state)
 
-    def get_checkbox_dataframe(self):
+    def get_checkbox_dataframe(self) -> pandas.DataFrame:
         checked_df = pandas.DataFrame(self.fullData)
         for i in range(self.resultWidget.rowCount()):
             if not self.resultWidget.cellWidget(i, 0).isChecked():
@@ -378,11 +378,11 @@ class MainWindow(QMainWindow):
 
 class ResultsWindow(QWidget):
 
-    def __init__(self, raw_data):
+    def __init__(self, raw_data: pandas.DataFrame):
         super().__init__()
         self.initUI(raw_data)
 
-    def initUI(self, raw_data):
+    def initUI(self, raw_data: pandas.DataFrame):
         start = time.process_time()
         norm_data = self.normalization(raw_data)
         self.fpr, self.tpr, self.threshold, self.roc_auc = self.roc_analyze(norm_data)
@@ -413,7 +413,7 @@ class ResultsWindow(QWidget):
 
         self.draw_roc_curve(self.fpr, self.tpr, self.roc_auc, picked_values)
 
-    def normalization(self, raw_data):
+    def normalization(self, raw_data: pandas.DataFrame) -> pandas.DataFrame:
         raw_data = raw_data.dropna(axis=1, how="all")
         column_names = list(raw_data)
         norm_data = pandas.DataFrame(raw_data, columns=raw_data.columns[:11])
@@ -425,7 +425,7 @@ class ResultsWindow(QWidget):
         norm_data = norm_data.fillna(0)
         return norm_data
 
-    def roc_analyze(self, norm_data):
+    def roc_analyze(self, norm_data: pandas.DataFrame):
         fpr = dict()
         tpr = dict()
         threshold = dict()
