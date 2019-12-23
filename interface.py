@@ -486,7 +486,7 @@ def all_divs(data: numpy.ndarray) -> numpy.ndarray:
     row_count, col_count = data.shape
     permutations_count = col_count * (col_count - 1)
     result = numpy.zeros((row_count, permutations_count))
-    for i, (divident, divider) in enumerate(permutations(range(len(data)), 2)):
+    for i, (divident, divider) in enumerate(permutations(range(col_count), 2)):
         result[:,i] = data[:,divident] / data[:,divider]
     return result
 
