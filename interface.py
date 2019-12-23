@@ -438,8 +438,9 @@ class ResultsWindow(QWidget):
         raw_data = raw_data.dropna(axis=1, how="all")
         column_names = list(raw_data)
         norm_data = pandas.DataFrame(raw_data, columns=raw_data.columns[:11])
-        for divident, divider in permutations(column_names[11:], 2):
-            norm_data[divident + '/' + divider] = raw_data[divident] / raw_data[divider]
+        result = all_divs(numpy.array(raw_data.iloc[:,11:]))
+        result_df = pandas.DataFrame(result, columns=map(lambda pair: '{}/{}'.format(*pair), permutations(column_names[11:], 2)), index=norm_data.index)
+        norm_data = pandas.concat([norm_data, result_df], axis='columns')
         norm_data = norm_data.dropna(axis=1, how="all")
         norm_data = norm_data.fillna(0)
         return norm_data
