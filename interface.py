@@ -155,9 +155,9 @@ class ClassManagementWidget(QWidget):
             a = QCheckBox()
             a.setChecked(True)
             self.resultWidget.setCellWidget(i, 0, a)
-            for j, _ in enumerate(self.table_labels):
+            for j, column_name in enumerate(self.table_labels):
                 a = QLabel()
-                a.setText(str(self.fullData.iloc[i, j]))
+                a.setText(str(self.fullData[column_name][i]))
                 self.resultWidget.setCellWidget(i, j + 1, a)
         self.resultWidget.resizeColumnsToContents()
 
