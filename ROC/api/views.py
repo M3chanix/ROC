@@ -1,11 +1,15 @@
 from django.http import HttpResponse, HttpRequest, JsonResponse
 
+import time
+from typing import Dict
+
 from sqlalchemy.orm.session import Session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 import pandas
 
+from core import ROC_curve_data, normalization, roc_analyze
 from model import Sample
 
 engine = create_engine('sqlite:///Data.db')
@@ -39,7 +43,7 @@ class Filter_values:
     def __str__(self):
         return str(self.__dict__)
 
-
+# curl '.../test?Tissue=Breast'
 def filter_entries(request: HttpRequest):
     filter_values = Filter_values(**request.GET.dict())
     columns = [
@@ -63,3 +67,44 @@ def filter_entries(request: HttpRequest):
     data: pandas.DataFrame = pandas.read_sql(query.statement, session.bind).dropna(axis=1, how="all")
 
     return HttpResponse(data.to_json(), content_type='application/json')
+
+# curl '.../normalize --data '{
+#   "Class" : {
+#       "0": 1,
+#       "1": 0,
+#       "2": 1,
+#       "3": 1
+#   },
+#   "Diagnosis": {
+#     "0": "Therapy",
+#     "1": "Placebo",
+#     "2": "Therapy",
+#     "3": "Therapy"
+#   },
+#   ...
+# }'
+#
+# normalized data
+def normalize(request: HttpRequest):
+    raw_data: pandas.DataFrame = pandas.read_json(request.body)
+
+    raw_data = pandas.concat([
+        raw_data.pop('Class'),
+        raw_data.pop('Sample'),
+        raw_data.pop('Tissue'),
+        raw_data.pop('Diagnosis'),
+        raw_data.pop('Date'),
+        raw_data.pop('File'),
+        raw_data.pop('Source'),
+        raw_data.pop('Material'),
+        raw_data.pop('Operator_RNA_Isolation'),
+        raw_data.pop('Operator_PCR'),
+        raw_data.pop('RNA_Concentration'),
+        raw_data
+    ], axis='columns')
+
+    start = time.process_time()
+    norm_data = normalization(raw_data)
+    roc_data = roc_analyze(norm_data)
+    print(time.process_time() - start)
+    return JsonResponse({key: value.auc for key, value in roc_data.items()})
