@@ -25,12 +25,12 @@ def normalization(raw_data: pandas.DataFrame) -> pandas.DataFrame:
     norm_data = norm_data.fillna(0)
     return norm_data
 
-def roc_analyze(norm_data: pandas.DataFrame) -> Dict[str, ROC_curve_data]:
+def roc_analyze(classes: pandas.DataFrame, norm_data: pandas.DataFrame) -> Dict[str, ROC_curve_data]:
     result = {}
-    for i in norm_data.columns[11:]:
-        fpr, tpr, threshold = metrics.roc_curve(norm_data["Class"], norm_data[i])
+    for name, column in norm_data.iteritems():
+        fpr, tpr, threshold = metrics.roc_curve(classes, column)
         roc_auc = metrics.auc(fpr, tpr)
-        result[i] = ROC_curve_data(fpr=fpr, tpr=tpr, threshold=threshold, auc=roc_auc)
+        result[name] = ROC_curve_data(fpr=fpr, tpr=tpr, threshold=threshold, auc=roc_auc)
     return result
 
 def all_divs(data: numpy.ndarray) -> numpy.ndarray:

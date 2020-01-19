@@ -394,7 +394,7 @@ class ResultsWindow(QWidget):
     def initUI(self, raw_data: pandas.DataFrame):
         start = time.process_time()
         norm_data = normalization(raw_data)
-        self.roc_data = roc_analyze(norm_data)
+        self.roc_data = roc_analyze(norm_data["Class"], norm_data.iloc[:,11:])
         print(time.process_time() - start)
 
         layout = QGridLayout()

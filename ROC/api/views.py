@@ -105,6 +105,6 @@ def normalize(request: HttpRequest):
 
     start = time.process_time()
     norm_data = normalization(raw_data)
-    roc_data = roc_analyze(norm_data)
+    roc_data = roc_analyze(norm_data["Class"], norm_data.iloc[:,11:])
     print(time.process_time() - start)
     return JsonResponse({key: value.auc for key, value in roc_data.items()})
