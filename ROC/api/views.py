@@ -1,5 +1,6 @@
 from django.http import HttpResponse, HttpRequest, JsonResponse
 
+from json import JSONEncoder
 import time
 from typing import Dict
 
@@ -8,6 +9,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 import pandas
+import numpy
 
 from core import ROC_curve_data, normalization, roc_analyze
 from model import Sample
@@ -107,4 +109,15 @@ def normalize(request: HttpRequest):
     norm_data = normalization(raw_data)
     roc_data = roc_analyze(norm_data["Class"], norm_data.iloc[:,11:])
     print(time.process_time() - start)
-    return JsonResponse({key: value.auc for key, value in roc_data.items()})
+    return JsonResponse(roc_data, encoder=Roc_data_JSONEncoder)
+
+class Roc_data_JSONEncoder(JSONEncoder):
+
+    def default(self, obj: ROC_curve_data):
+        assert isinstance(obj, ROC_curve_data)
+        return {
+            'fpr'       : list(obj.fpr),
+            'tpr'       : list(obj.tpr),
+            'threshold' : list(obj.threshold),
+            'auc'       : obj.auc
+        }
