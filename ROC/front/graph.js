@@ -76,7 +76,7 @@ function main_graph(loaded_data) {
                 label: this.elem.textContent,
                 data: map2((a, b, index) => {return {x: a, y: b}}, entry.fpr, entry.tpr),
                 borderWidth: 1,
-                borderColor: 'green',
+                borderColor: getRandomColor(),
                 showLine: true,
                 fill: false
             })
@@ -116,6 +116,15 @@ function main_graph(loaded_data) {
         data: speedData,
         options: chartOptions
     });    
+}
+
+function getRandomColor() {
+    var letters = '0123456789ABCDEF';
+    var color = '#';
+    for (var i = 0; i < 6; i++) {
+      color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
 }
 
 function map2(func, arr1, arr2) {
