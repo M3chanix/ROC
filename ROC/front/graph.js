@@ -1,32 +1,6 @@
 window.onload = main;
 
-function map2(func, arr1, arr2) {
-    return arr1.map((value, index) => func(value, arr2[index], index))
-}
-
-class ClickSelectableElement {
-    constructor (textContent) {
-        this.elem = document.createElement('div')
-        this.elem.classList.add('data_entry')
-        this.elem.textContent = textContent
-        this.selected = false
-
-        this.elem.onclick = () => {
-            if (this.selected) {
-                this.elem.classList.remove('selected')
-                this.on_unselect(this)
-                this.selected = false
-            } else {
-                this.elem.classList.add('selected')
-                this.on_select(this)
-                this.selected = true
-            }
-        }
-    }
-}
-
 function main() {
-
     // TODO написать логику первой страницы по выбору нужных данных
 
     document.getElementById("analyze").onclick = () => {
@@ -114,19 +88,19 @@ function main_graph(loaded_data) {
     var ctx = document.getElementById('myChart').getContext('2d');
     var speedData = {
         datasets: [{
-          label: "1",
-          data: [
-              {x: 0, y: 0},
-              {x: 0.5, y:0.5},
-              {x: 1, y: 1}
+            label: "1",
+            data: [
+                {x: 0, y: 0},
+                {x: 0.5, y:0.5},
+                {x: 1, y: 1}
           ],
           borderWidth: 1,
           borderColor: 'black',
           showLine: true,
           fill: false
         }]
-      };
-       
+    };
+
     var chartOptions = {
         legend: {
             display: true,
@@ -142,4 +116,29 @@ function main_graph(loaded_data) {
         data: speedData,
         options: chartOptions
     });    
+}
+
+function map2(func, arr1, arr2) {
+    return arr1.map((value, index) => func(value, arr2[index], index))
+}
+
+class ClickSelectableElement {
+    constructor (textContent) {
+        this.elem = document.createElement('div')
+        this.elem.classList.add('data_entry')
+        this.elem.textContent = textContent
+        this.selected = false
+
+        this.elem.onclick = () => {
+            if (this.selected) {
+                this.elem.classList.remove('selected')
+                this.on_unselect(this)
+                this.selected = false
+            } else {
+                this.elem.classList.add('selected')
+                this.on_select(this)
+                this.selected = true
+            }
+        }
+    }
 }
