@@ -4,6 +4,27 @@ function map2(func, arr1, arr2) {
     return arr1.map((value, index) => func(value, arr2[index], index))
 }
 
+class Entry {
+    constructor (textContent) {
+        this.elem = document.createElement('div')
+        this.elem.classList.add('data_entry')
+        this.elem.textContent = textContent
+        this.selected = false
+
+        this.elem.onclick = () => {
+            if (this.selected) {
+                this.elem.classList.remove('selected')
+                this.on_unselect(this)
+                this.selected = false
+            } else {
+                this.elem.classList.add('selected')
+                this.on_select(this)
+                this.selected = true
+            }
+        }
+    }
+}
+
 function main() {
 
     loaded_data = {
@@ -47,33 +68,29 @@ function main() {
 
     elem = document.getElementById('data_selection');
     for (var key in loaded_data) {
-        div = document.createElement('div')
-        div.textContent = key
-        div.onclick = function (click) {
-            classList = click.target.classList
-            if (classList.contains('selected')) {
-                classList.remove('selected')
-                myLineChart.data.datasets.splice(
-                    myLineChart.data.datasets.findIndex(
-                        (elem) => elem.label === click.target.textContent
-                    ),
-                    1
-                )
-            } else {
-                classList.add('selected')
-                entry = loaded_data[click.target.textContent];
-                myLineChart.data.datasets.push({
-                    label: click.target.textContent,
-                    data: map2((a, b, index) => {return {x: a, y: b}}, entry.fpr, entry.tpr),
-                    borderWidth: 1,
-                    borderColor: 'green',
-                    showLine: true,
-                    fill: false
-                })
-            }
+        div = new Entry(key)
+        div.on_unselect = function() {
+            myLineChart.data.datasets.splice(
+                myLineChart.data.datasets.findIndex(
+                    (elem) => elem.label === this.elem.textContent
+                ),
+                1
+            )
             myLineChart.update()
         }
-        elem.appendChild(div)
+        div.on_select = function() {
+            entry = loaded_data[this.elem.textContent];
+            myLineChart.data.datasets.push({
+                label: this.elem.textContent,
+                data: map2((a, b, index) => {return {x: a, y: b}}, entry.fpr, entry.tpr),
+                borderWidth: 1,
+                borderColor: 'green',
+                showLine: true,
+                fill: false
+            })
+            myLineChart.update()
+        }
+        elem.appendChild(div.elem)
     }
     
 
