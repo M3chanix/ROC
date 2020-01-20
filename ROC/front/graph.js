@@ -4,7 +4,7 @@ function map2(func, arr1, arr2) {
     return arr1.map((value, index) => func(value, arr2[index], index))
 }
 
-class Entry {
+class ClickSelectableElement {
     constructor (textContent) {
         this.elem = document.createElement('div')
         this.elem.classList.add('data_entry')
@@ -68,7 +68,7 @@ function main() {
 
     elem = document.getElementById('data_selection');
     for (var key in loaded_data) {
-        div = new Entry(key)
+        div = new ClickSelectableElement(key)
         div.on_unselect = function() {
             myLineChart.data.datasets.splice(
                 myLineChart.data.datasets.findIndex(
