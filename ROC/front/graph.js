@@ -75,7 +75,7 @@ function main_graph(loaded_data) {
             myLineChart.data.datasets.push({
                 label: this.elem.textContent,
                 data: map2((a, b, index) => {return {x: a, y: b}}, entry.fpr, entry.tpr),
-                borderWidth: 1,
+                borderWidth: 2,
                 borderColor: getRandomColor(),
                 showLine: true,
                 fill: false
@@ -102,9 +102,14 @@ function main_graph(loaded_data) {
     };
 
     var chartOptions = {
+        elements: {
+            line: {
+                tension: 0
+            }
+        },
         legend: {
             display: true,
-            position: 'top',
+            position: 'bottom',
             labels: {
                 boxWidth: 80,
                 fontColor: 'black'
