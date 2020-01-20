@@ -27,6 +27,15 @@ class ClickSelectableElement {
 
 function main() {
 
+    // TODO написать логику первой страницы по выбору нужных данных
+
+    // обратится к серверу по урлу /api/normalize,
+    // распарсить полученный в ответ json
+    // результат записать в переменную loaded_data вместо того, что там сейчас
+
+    document.getElementById("first-page").classList.add("hidden")
+    document.getElementById("graph-page").classList.remove("hidden")
+
     loaded_data = {
         "hsa-miR-133a-3p/hsa-miR-320c-3p": {
             "fpr": [0.0, 0.1, 1.0],
@@ -66,6 +75,11 @@ function main() {
         }
     }
 
+    main_graph(loaded_data)
+
+}
+
+function main_graph(loaded_data) {
     elem = document.getElementById('data_selection');
     for (var key in loaded_data) {
         div = new ClickSelectableElement(key)
@@ -92,7 +106,6 @@ function main() {
         }
         elem.appendChild(div.elem)
     }
-    
 
     var ctx = document.getElementById('myChart').getContext('2d');
     var speedData = {
@@ -124,5 +137,5 @@ function main() {
         type: 'scatter',
         data: speedData,
         options: chartOptions
-    });
+    });    
 }

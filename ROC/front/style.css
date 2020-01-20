@@ -6,3 +6,7 @@
 .data_entry {
     margin-top: 2px;
 }
+
+.hidden {
+    display: none;
+}
