@@ -14,12 +14,13 @@ function main() {
 }
 
 function get_normalized_data() {
-    axios.get('/api/test?Tissue=Breast').then(function (response) {console.log(response.data.Diagnosis)})
-    console.log(get_forms_data())
-
     // TODO
     // обратится к серверу по урлу /api/normalize,
     // распарсить и вернуть полученный в ответ json
+    forms = get_forms_data()
+    axios.get('/api/test', {
+        params: forms.first
+    }).then(function (response) {console.log(response.data)})
     return {
         "hsa-miR-133a-3p/hsa-miR-320c-3p": {
             "fpr": [0.0, 0.1, 1.0],
