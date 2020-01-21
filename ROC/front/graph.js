@@ -17,7 +17,7 @@ async function get_normalized_data() {
     // TODO
     // обратится к серверу по урлу /api/normalize,
     // распарсить и вернуть полученный в ответ json
-    forms = await get_forms_data()
+    forms = get_forms_data()
     response1 = await axios.get('/api/test', {
         params: forms.first
     })
