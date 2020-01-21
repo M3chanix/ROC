@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "axios": "^0.19.1",
     "chart.js": "^2.9.3"
   }
 }
