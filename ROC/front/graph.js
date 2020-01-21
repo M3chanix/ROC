@@ -18,13 +18,9 @@ async function get_normalized_data() {
     // обратится к серверу по урлу /api/normalize,
     // распарсить и вернуть полученный в ответ json
     forms = get_forms_data()
-    response1 = await axios.get('/api/test', {
-        params: forms.first
-    })
+    response1 = await api_get_filtered(forms.first)
     console.log(response1.data)
-    response2 = await axios.get('/api/test', {
-        params: forms.second
-    })
+    response2 = await api_get_filtered(forms.second)
     console.log(response2.data)
 
     return {
@@ -65,6 +61,10 @@ async function get_normalized_data() {
             "auc": 0.25
         }
     }
+}
+
+function api_get_filtered(filters) {
+    return axios.get('/api/test', {params: filters})
 }
 
 function get_forms_data() {
