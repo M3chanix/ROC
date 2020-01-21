@@ -18,10 +18,10 @@ async function get_normalized_data() {
     // обратится к серверу по урлу /api/normalize,
     // распарсить и вернуть полученный в ответ json
     forms = get_forms_data()
-    response1 = await api_get_filtered(forms.first)
-    console.log(response1.data)
-    response2 = await api_get_filtered(forms.second)
-    console.log(response2.data)
+    dataset1 = await api_get_filtered(forms.first)
+    console.log(dataset1)
+    dataset2 = await api_get_filtered(forms.second)
+    console.log(dataset2)
 
     return {
         "hsa-miR-133a-3p/hsa-miR-320c-3p": {
@@ -63,8 +63,10 @@ async function get_normalized_data() {
     }
 }
 
-function api_get_filtered(filters) {
-    return axios.get('/api/test', {params: filters})
+
+async function api_get_filtered(filters) {
+    resp = await axios.get('/api/test', {params: filters})
+    return resp.data;
 }
 
 function get_forms_data() {
