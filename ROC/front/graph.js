@@ -3,27 +3,30 @@ window.onload = main;
 function main() {
     // TODO написать логику первой страницы по выбору нужных данных
 
-    document.getElementById("analyze").onclick = () => {
+    document.getElementById("analyze").onclick = async () => {
         
         document.getElementById("first-page").classList.add("hidden")
         document.getElementById("graph-page").classList.remove("hidden")
         
-        loaded_data = get_normalized_data()
+        loaded_data = await get_normalized_data()
         main_graph(loaded_data)
     }
 }
 
-function get_normalized_data() {
+async function get_normalized_data() {
     // TODO
     // обратится к серверу по урлу /api/normalize,
     // распарсить и вернуть полученный в ответ json
-    forms = get_forms_data()
-    axios.get('/api/test', {
+    forms = await get_forms_data()
+    response1 = await axios.get('/api/test', {
         params: forms.first
-    }).then(function (response) {console.log(response.data)})
-    axios.get('/api/test', {
+    })
+    console.log(response1.data)
+    response2 = await axios.get('/api/test', {
         params: forms.second
-    }).then(function (response) {console.log(response.data)})
+    })
+    console.log(response2.data)
+
     return {
         "hsa-miR-133a-3p/hsa-miR-320c-3p": {
             "fpr": [0.0, 0.1, 1.0],
