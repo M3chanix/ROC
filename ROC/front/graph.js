@@ -15,11 +15,7 @@ function main() {
 
 function get_normalized_data() {
     axios.get('/api/test?Tissue=Breast').then(function (response) {console.log(response.data.Diagnosis)})
-    sample = document.getElementById('Sample-1').value;
-    tissue = document.getElementById('Tissue-1').value;
-
-    console.log(sample)
-    console.log(tissue)
+    console.log(get_forms_data())
 
     // TODO
     // обратится к серверу по урлу /api/normalize,
@@ -60,6 +56,35 @@ function get_normalized_data() {
             "tpr": [0.0, 0.0, 1.0],
             "threshold": [1.9941413370633843, 0.9941413370633844, 0.0],
             "auc": 0.25
+        }
+    }
+}
+
+function get_forms_data() {
+    return {
+        first: {
+            Sample:                 document.getElementById('Sample-1').value,
+            Tissue:                 document.getElementById('Tissue-1').value,
+            Diagnosis:              document.getElementById('Diagnosis-1').value,
+            Date:                   document.getElementById('Date-1').value,
+            File:                   document.getElementById('File-1').value,
+            Source:                 document.getElementById('Source-1').value,
+            Material:               document.getElementById('Material-1').value,
+            Operator_RNA_Isolation: document.getElementById('Operator_RNA_Isolation-1').value,
+            Operator_PCR:           document.getElementById('Operator_PCR-1').value,
+            RNA_Concentration:      document.getElementById('RNA_Concentration-1').value
+        },
+        second: {
+            Sample:                 document.getElementById('Sample-2').value,
+            Tissue:                 document.getElementById('Tissue-2').value,
+            Diagnosis:              document.getElementById('Diagnosis-2').value,
+            Date:                   document.getElementById('Date-2').value,
+            File:                   document.getElementById('File-2').value,
+            Source:                 document.getElementById('Source-2').value,
+            Material:               document.getElementById('Material-2').value,
+            Operator_RNA_Isolation: document.getElementById('Operator_RNA_Isolation-2').value,
+            Operator_PCR:           document.getElementById('Operator_PCR-2').value,
+            RNA_Concentration:      document.getElementById('RNA_Concentration-2').value
         }
     }
 }
