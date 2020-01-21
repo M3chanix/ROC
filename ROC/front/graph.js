@@ -15,8 +15,8 @@ function main() {
 
 function get_normalized_data() {
     axios.get('/api/test?Tissue=Breast').then(function (response) {console.log(response.data.Diagnosis)})
-    sample = document.getElementById('Sample').value;
-    tissue = document.getElementById('Tissue').value;
+    sample = document.getElementById('Sample-1').value;
+    tissue = document.getElementById('Tissue-1').value;
 
     console.log(sample)
     console.log(tissue)
