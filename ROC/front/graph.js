@@ -21,6 +21,9 @@ function get_normalized_data() {
     axios.get('/api/test', {
         params: forms.first
     }).then(function (response) {console.log(response.data)})
+    axios.get('/api/test', {
+        params: forms.second
+    }).then(function (response) {console.log(response.data)})
     return {
         "hsa-miR-133a-3p/hsa-miR-320c-3p": {
             "fpr": [0.0, 0.1, 1.0],
