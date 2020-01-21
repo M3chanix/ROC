@@ -19,10 +19,9 @@ async function get_normalized_data() {
     // распарсить и вернуть полученный в ответ json
     forms = get_forms_data()
     dataset1 = await api_get_filtered(forms.first)
-    console.log(dataset1)
     dataset2 = await api_get_filtered(forms.second)
-    console.log(dataset2)
-
+    result = await api_get_normalized(dataset1, dataset2)
+    // return await api_get_normalized(dataset1, dataset2)
     return {
         "hsa-miR-133a-3p/hsa-miR-320c-3p": {
             "fpr": [0.0, 0.1, 1.0],
@@ -61,6 +60,12 @@ async function get_normalized_data() {
             "auc": 0.25
         }
     }
+}
+
+async function api_get_normalized(class1, class2) {
+    // TODO
+    // 1) combine class1 and class2 into one object with Class field
+    // 2) return await axios.post('/api/normalized') ...
 }
 
 
