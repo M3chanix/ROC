@@ -1,6 +1,7 @@
 from django.http import HttpResponse, HttpRequest, JsonResponse
 
 from json import JSONEncoder
+import json
 import time
 from typing import Dict
 
@@ -88,8 +89,13 @@ def filter_entries(request: HttpRequest):
 #
 # normalized data
 def normalize(request: HttpRequest):
-    raw_data: pandas.DataFrame = pandas.read_json(request.body)
-
+    class1_data: pandas.DataFrame = pandas.read_json(json.dumps(json.loads(request.body)['first']))
+    class2_data: pandas.DataFrame = pandas.read_json(json.dumps(json.loads(request.body)['second']))
+    class1_data.insert(0, "Class", 1)
+    class2_data.insert(0, "Class", 0)
+    raw_data: pandas.DataFrame = class1_data.append(class2_data)
+    # raw_data: pandas.DataFrame = pandas.read_json(json.dumps(json.loads(request.body)['first']))
+    # print(json.loads(request.body)['first'])
     raw_data = pandas.concat([
         raw_data.pop('Class'),
         raw_data.pop('Sample'),
