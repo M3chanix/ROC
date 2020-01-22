@@ -4,6 +4,9 @@ from json import JSONEncoder
 import time
 from typing import Dict
 
+from django.shortcuts import render
+from .forms import NameForm
+
 from sqlalchemy.orm.session import Session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -111,6 +114,16 @@ def normalize(request: HttpRequest):
     print(time.process_time() - start)
     return JsonResponse(roc_data, encoder=Roc_data_JSONEncoder)
 
+def class_and_append(request: HttpRequest):
+    class1_data: pandas.DataFrame = pandas.read_json.(request.body.first)
+    class1_data: pandas.DataFrame = pandas.read_json(request.body.second)
+    class1_data.insert(0, "Class", 1)
+    class2_data.insert(0, "Class", 0)
+    result_data: pandas.DataFrame = class1_data.append(class2_data)
+    json_data = result_data.to_json()
+    return JsonResponse(json_data)
+
+
 class Roc_data_JSONEncoder(JSONEncoder):
 
     def default(self, obj: ROC_curve_data):
@@ -121,3 +134,4 @@ class Roc_data_JSONEncoder(JSONEncoder):
             'threshold' : list(obj.threshold),
             'auc'       : obj.auc
         }
+
