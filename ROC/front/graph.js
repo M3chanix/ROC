@@ -66,26 +66,10 @@ async function api_get_normalized(class1, class2) {
     // TODO
     // 1) combine class1 and class2 into one object with Class field
     // 2) return await axios.post('/api/normalized') ...    
-    full_data = await axios.post('/api/append', {first: class1, second: class2})
-    norm_data = await axios.post('api/normalized', full_data)
-
-
-    //class1 = await add_class_object(class1, 0)
-    //class2 = await add_class_object(class2, 1)
-    //console.log(class1)
-    //console.log(class2)
-    //console.log(Object.keys(class1)[0])
-    //class1_length = Object.keys(class1["Tissue"]).length
-    //class2_length = Object.keys(class2["Tissue"]).length
-    //for (let key in Object.keys(class1)){
-//	for (i = 0; i<class2_length; i++)
- //           console.log(key)
-//	    console.log(Object.keys(class1)[key])
-//	    class1[Object.keys(class1)[key]][i+class1_length] = class2[Object.keys(class1)[key]][i]
- //}
-    //console.log(Object.keys(class1["Tissue"]).length)
-    //class1["Tissue"][4]="lpl"
-    //console.log(class1)
+    class1 = await add_class_object(class1, 0)
+    class2 = await add_class_object(class2, 1)
+    console.log(class1)
+    console.log(class2)
 }
 
 function add_class_object(dataset, class_value) {
