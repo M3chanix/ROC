@@ -65,21 +65,7 @@ async function get_normalized_data() {
 async function api_get_normalized(class1, class2) {
     // TODO
     // 1) combine class1 and class2 into one object with Class field
-    // 2) return await axios.post('/api/normalized') ...    
-    class1 = await add_class_object(class1, 0)
-    class2 = await add_class_object(class2, 1)
-    console.log(class1)
-    console.log(class2)
-}
-
-function add_class_object(dataset, class_value) {
-    data=[]    
-    element = Object.keys(dataset)[0]    
-    for (let key in Object.keys(dataset[element])){        
-        data[key]=class_value        
-    }                
-    dataset["Class"]=data
-    return dataset
+    // 2) return await axios.post('/api/normalized') ...
 }
 
 
